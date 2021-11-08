@@ -1,0 +1,55 @@
+﻿<Window
+    x:Class="TileMapEditor.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:TileMapEditor"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:TileMapEditor.ViewModels"
+    xmlns:views="clr-namespace:TileMapEditor.Views"
+    Title="MainWindow"
+    Width="1280"
+    Height="720"
+    d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
+    mc:Ignorable="d">
+    <Grid>
+        <Rectangle
+            Opacity="1"
+            Stretch="Fill">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Offset="0.0" Color="#bdbdbd" />
+                    <GradientStop Offset="1.0" Color="#d6d6d6" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0" />
+            <GridSplitter
+                Grid.Column="1"
+                Width="5"
+                Background="Black" />
+            <Grid Grid.Column="2">
+                <views:GridEditorView
+                    x:Name="GridEditorView"
+                    DataContext="{Binding GridEditorViewModel}" />
+            </Grid>
+            <GridSplitter
+                Grid.Column="3"
+                Width="5"
+                Background="Black" />
+            <Grid Grid.Column="4">
+                <views:TileEditorView
+                    x:Name="TileEditorView"
+                    DataContext="{Binding TileEditorViewModel}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,77 @@
+﻿<UserControl
+    x:Class="TileMapEditor.Views.GridEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:TileMapEditor.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:TileMapEditor.Models"
+    xmlns:viewModels="clr-namespace:TileMapEditor.ViewModels"
+    d:DataContext="{d:DesignInstance viewModels:GridEditorViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid>
+        <Button
+            Width="50"
+            Height="50"
+            Content="Print"
+            VerticalAlignment="Top"
+            Command="{Binding PrintInfo}" />
+        <ItemsControl
+            Width="600"
+            Height="400"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            ItemsSource="{Binding Tiles, UpdateSourceTrigger=PropertyChanged}">
+            <ItemsControl.Resources>
+                <DataTemplate DataType="{x:Type models:Tile}">
+                    <Button>
+                        <Image
+                            Margin="1"
+                            PreviewMouseLeftButtonDown="TileElement_OnPreviewMouseDown"
+                            Stretch="Fill"
+                            Tag="{Binding TileId}">
+                            <!-- MouseRightButtonDown="UIElement_OnPreviewMouseRightButtonDown"-->
+                        <Image.Source>
+                                <CroppedBitmap
+                                    Source="{Binding BackgroundSource}"
+                                    SourceRect="{Binding CroppedBitmap.SourceRect}" />
+                            </Image.Source>
+                        </Image>
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border
+                                                x:Name="Border"
+                                                Background="{TemplateBinding Background}">
+                                                <ContentPresenter
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="BorderBrush" Value="Chartreuse" />
+                                                    <Setter TargetName="Border" Property="BorderThickness" Value="1" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.Resources>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid
+                        Columns="{Binding Columns}"
+                        Rows="{Binding Rows}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </Grid>
+</UserControl>
