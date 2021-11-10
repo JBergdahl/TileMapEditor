@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
+using TileMapEditor.Models;
 
 namespace TileMapEditor.Views
 {
@@ -28,18 +29,50 @@ namespace TileMapEditor.Views
             InitializeComponent();
         }
 
-        //public Image SelectedCroppedImage { get; set; }
-        public ObservableCollection<Models.Tile> SelectedCroppedImage { get; set; } = new();
+        public event EventHandler<Tile> SelectedCroppedImageChanged;
 
-        public event EventHandler<Models.Tile> SelectedCroppedImageChanged;
-        private void TileImage_OnMouseDown(object sender, MouseButtonEventArgs e)
+        private void TileSetImage_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            var pressedTile = (Image)sender;
-            SelectedTileSetImage.Source = pressedTile.Source;
-            Debug.WriteLine(pressedTile.Source);
-            SelectedCroppedImageChanged?.Invoke(this, new Models.Tile{CroppedBitmap = (CroppedBitmap)pressedTile.Source, ImageId = (int)pressedTile.Tag, ImageTest = pressedTile});
+            var pressedTileSetImage = (Image)sender;
             
-            //SelectedCroppedImageChanged?.Invoke(this, new Models.Tile{Background = (BitmapImage)pressedTile.Source, ImageId = (int)pressedTile.Tag, ImageTest = pressedTile});
+            FillCheckBox.IsChecked = false;
+            
+            // Get pressed TileSet image and presents it in the preview image
+            SelectedTileSetImage.Source = pressedTileSetImage.Source;
+            
+            var tileInfoToSend = new Tile
+            {
+                ImageId = (int)pressedTileSetImage.Tag,
+                Image = pressedTileSetImage
+                //IsCollidable = IsCollidableCheckBox.IsChecked.HasValue
+            };
+
+            // Send Tile info
+            SelectedCroppedImageChanged?.Invoke(this, tileInfoToSend);
+        }
+
+        private void FillCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            if (FillCheckBox.IsChecked == true)
+            {
+                // Fill empty grid
+            }
+        }
+
+        private void CollidableCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            if (CollidableCheckBox.IsChecked == true)
+            {
+
+            }
+        }
+
+        private void LayerCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            if (LayerCheckBox.IsChecked == true)
+            {
+
+            }
         }
     }
 }

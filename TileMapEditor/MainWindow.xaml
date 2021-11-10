@@ -25,9 +25,9 @@
         </Rectangle>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -39,6 +39,7 @@
             <Grid Grid.Column="2">
                 <views:GridEditorView
                     x:Name="GridEditorView"
+                    Margin="10,5,10,5"
                     DataContext="{Binding GridEditorViewModel}" />
             </Grid>
             <GridSplitter

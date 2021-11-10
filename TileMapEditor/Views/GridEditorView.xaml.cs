@@ -48,18 +48,16 @@ namespace TileMapEditor.Views
         private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             var image = (Image)sender;
-            Debug.WriteLine(image.Source);
-            if (SelectedImage is not null)
-            {
-                image.Source = SelectedImage.Source;
-                TileId = (int[,])image.Tag;
-                TileElementPressed?.Invoke(this, TileId);
-            }
+
+            if (SelectedImage is null) return;
+            image.Source = SelectedImage.Source;
+            TileId = (int[,])image.Tag;
+            TileElementPressed?.Invoke(this, TileId);
         }
 
-        public void OnSelectedCroppedImageChanged(object? sender, Tile e)
+        public void OnSelectedCroppedImageChanged(object? sender, Tile tile)
         {
-            SelectedImage = e.ImageTest;
+            SelectedImage = tile.Image;
         }
     }
 }

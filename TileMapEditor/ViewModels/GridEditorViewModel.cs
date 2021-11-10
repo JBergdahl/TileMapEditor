@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
+using TileMapEditor.Models;
 
 namespace TileMapEditor.ViewModels
 {
@@ -13,25 +14,25 @@ namespace TileMapEditor.ViewModels
     {
         private int _rows;
         private int _columns;
-        private Models.Tile _selectedImage;
+        private Tile _selectedImage;
 
         public GridEditorViewModel()
         {
             InitTiles(8,11);
-            PrintInfo = new RelayCommand(gogo);
+            PrintInfo = new RelayCommand(PrintTileInfo);
         }
 
         public RelayCommand PrintInfo { get; set; }
 
-        private void gogo()
+        private void PrintTileInfo()
         {
-            for (var i = 0; i < Tiles.Count; i++)
+            foreach (var tile in Tiles)
             {
-                Debug.WriteLine("Row: " + Tiles[i].TileId.GetLength(0) + ", Col: " + Tiles[i].TileId.GetLength(1) + ", ID: " + Tiles[i].ImageId);
+                Debug.WriteLine("Row: " + tile.TileId.GetLength(0) + ", Col: " + tile.TileId.GetLength(1) + ", ID: " + tile.ImageId);
             }
         }
 
-        public List<Models.Tile> Tiles { get; set; } = new();
+        public List<Tile> Tiles { get; set; } = new();
 
         public int Rows
         {
@@ -45,7 +46,7 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _columns, value);
         }
 
-        public Models.Tile SelectedImage
+        public Tile SelectedImage
         {
             get => _selectedImage;
             set => SetProperty(ref _selectedImage, value);
@@ -59,19 +60,16 @@ namespace TileMapEditor.ViewModels
             {
                 for (var c = 0; c < columns; c++)
                 {
-                    Tiles.Add(new Models.Tile
+                    Tiles.Add(new Tile
                     {
                         TileId = new int[r, c],
                         ImageId = -1,
-                        Image = " ",
-                        Data = string.Format("Row {0}\nColumn {1}", r, c),
-                        Background = new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Bild.png")),
-                        BackgroundSource = new CroppedBitmap(new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png")), Int32Rect.Empty)
+                        ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"
                     });
                 }
             }
         }
-        private string _tileSetPath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png";
+
         public void OnTileElementPressed(object? sender, int[,] tileId)
         {
             Debug.WriteLine("Row: " + tileId.GetLength(0) + ", Col: " + tileId.GetLength(1));
@@ -79,22 +77,12 @@ namespace TileMapEditor.ViewModels
             var tile = Tiles.Find(
                 x => x.TileId.GetLength(0) == tileId.GetLength(0) && x.TileId.GetLength(1) == tileId.GetLength(1));
 
-            if (tile is not null && SelectedImage is not null)
-            {
-                tile.ImageId = SelectedImage.ImageId;
-                tile.BackgroundSource = SelectedImage.CroppedBitmap;
-
-                tile.CroppedBitmap = SelectedImage.CroppedBitmap;
-                tile.CroppedBitmap.Source = SelectedImage.CroppedBitmap.Source;
-                tile.CroppedBitmap.SourceRect = SelectedImage.CroppedBitmap.SourceRect;
-
-                tile.ImageTest = SelectedImage.ImageTest;
-                tile.Image = SelectedImage.Image;
-                Debug.WriteLine(tile.ImageId);
-            }
+            if (tile is null || SelectedImage is null) return;
+            tile.ImageId = SelectedImage.ImageId;
+            tile.ImagePath = SelectedImage.ImagePath;
         }
 
-        public void OnSelectedCroppedImageChanged(object? sender, Models.Tile tile)
+        public void OnSelectedCroppedImageChanged(object? sender, Tile tile)
         {
             SelectedImage = tile;
         }

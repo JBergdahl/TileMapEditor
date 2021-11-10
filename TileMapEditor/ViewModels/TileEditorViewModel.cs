@@ -18,10 +18,11 @@ namespace TileMapEditor.ViewModels
     {
         public TileEditorViewModel()
         {
-            InitTileset(8, 8);
+            InitTileSet(8, 8);
         }
 
         private string _tileSetPath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png";
+
 
         private int _rows;
         private int _columns;
@@ -38,33 +39,28 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _columns, value);
         }
 
-        public List<Models.Tile> Tiles { get; set; } = new();
+        public List<Tile> Tiles { get; set; } = new();
 
-        private void InitTileset(int rows, int cols)
+        private void InitTileSet(int rows, int cols)
         {
             var tileSetBitmapImage = new BitmapImage(new Uri(_tileSetPath));
-            var img = new Image{Width = 64, Height = 64};
-            //img.MouseDown += new MouseButtonEventHandler()
-            var cb = new CroppedBitmap(tileSetBitmapImage, new Int32Rect(0, 0, 64, 64));
-            
-            var tile = new Models.Tile { Background = tileSetBitmapImage, CroppedBitmap = cb, Data = "hej"};
-
-            int xPositionCropped = 0;
-            int yPositionCropped = 0;
+            var xPositionCropped = 0;
+            var yPositionCropped = 0;
+            var imageIdCounter = 0;
 
             Rows = rows;
             Columns = cols;
-            int imageIdCounter = 0;
 
             for (var r = 0; r < rows; r++)
             {
                 for (var c = 0; c < cols; c++)
                 {
-                    Tiles.Add(new Models.Tile
+                    Tiles.Add(new Tile
                     {
-                        TileId = new int[r, c],
+                        //TileId = new int[r, c], NEEDED?!?!?!
                         ImageId = imageIdCounter,
-                        CroppedBitmap = new CroppedBitmap(tileSetBitmapImage, 
+                        ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png",
+                        CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage, 
                             new Int32Rect(xPositionCropped * 64, yPositionCropped * 64, 64,64))
                     });
 
@@ -90,6 +86,13 @@ namespace TileMapEditor.ViewModels
 
                     if (xPositionCropped >= 20)
                     {
+                        Tiles.Add(new Tile
+                        {
+                            //TileId = new int[r, c], NEEDED?!?!?!
+                            ImageId = -1,
+                            ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png",
+                            CroppedTileSetImage = new CroppedBitmap(new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png")), Int32Rect.Empty)
+                        });
                         c = 8;
                         r = 8;
                     }
