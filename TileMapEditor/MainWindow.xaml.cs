@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Toolkit.Mvvm.DependencyInjection;
+using TileMapEditor.Models;
 using TileMapEditor.ViewModels;
 using TileMapEditor.Views;
 
@@ -32,11 +33,6 @@ namespace TileMapEditor
             var mainWindow = new MainWindowViewModel();
             DataContext = mainWindow;
 
-            if (TileEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
-            {
-                TileEditorView.SelectedCroppedImageChanged += gridEditorViewModel.OnSelectedCroppedImageChanged;
-            }
-
             if (GridEditorView is not null && mainWindow.GridEditorViewModel is not null)
             {
                 GridEditorView.TileElementPressed += mainWindow.GridEditorViewModel.OnTileElementPressed;
@@ -45,6 +41,12 @@ namespace TileMapEditor
             if (TileEditorView is not null && GridEditorView is not null)
             {
                 TileEditorView.SelectedCroppedImageChanged += GridEditorView.OnSelectedCroppedImageChanged;
+            }
+
+            
+            if (TileEditorView is not null && mainWindow.TileViewModel is { } tileViewModel)
+            {
+                TileEditorView.SelectedCroppedImageChanged += tileViewModel.OnSelectedCroppedImageChanged;
             }
         }
     }

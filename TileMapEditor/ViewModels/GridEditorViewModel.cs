@@ -14,7 +14,7 @@ namespace TileMapEditor.ViewModels
     {
         private int _rows;
         private int _columns;
-        private Tile _selectedImage;
+        private Tile _tileToBePlaced;
 
         public GridEditorViewModel()
         {
@@ -29,6 +29,7 @@ namespace TileMapEditor.ViewModels
             foreach (var tile in Tiles)
             {
                 Debug.WriteLine("Row: " + tile.TileId.GetLength(0) + ", Col: " + tile.TileId.GetLength(1) + ", ID: " + tile.ImageId);
+                Debug.WriteLine("Is collidable: " + tile.IsCollidable + ", Layer ID: " + tile.LayerId);
             }
         }
 
@@ -46,11 +47,7 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _columns, value);
         }
 
-        public Tile SelectedImage
-        {
-            get => _selectedImage;
-            set => SetProperty(ref _selectedImage, value);
-        }
+        public Tile TileToBePlaced { get; set; } = new();
 
         public void InitTiles(int rows, int columns)
         {
@@ -74,17 +71,30 @@ namespace TileMapEditor.ViewModels
         {
             Debug.WriteLine("Row: " + tileId.GetLength(0) + ", Col: " + tileId.GetLength(1));
 
-            var tile = Tiles.Find(
+            var tileOnGrid = Tiles.Find(
                 x => x.TileId.GetLength(0) == tileId.GetLength(0) && x.TileId.GetLength(1) == tileId.GetLength(1));
 
-            if (tile is null || SelectedImage is null) return;
-            tile.ImageId = SelectedImage.ImageId;
-            tile.ImagePath = SelectedImage.ImagePath;
+            if (tileOnGrid is null || TileToBePlaced is null) return;
+
+            tileOnGrid.ImageId = TileToBePlaced.ImageId;
+            tileOnGrid.ImagePath = TileToBePlaced.ImagePath;
+            tileOnGrid.IsCollidable = TileToBePlaced.IsCollidable;
+            tileOnGrid.LayerId = TileToBePlaced.LayerId;
         }
 
-        public void OnSelectedCroppedImageChanged(object? sender, Tile tile)
+        public void OnSelectedTileChanged(object? sender, Tile tile)
         {
-            SelectedImage = tile;
+            TileToBePlaced = tile;
+        }
+
+        public void OnSelectedTileCollidableChanged(object? sender, bool collidable)
+        {
+            TileToBePlaced.IsCollidable = collidable;
+        }
+
+        public void OnSelectedTileLayerChanged(object? sender, int layerId)
+        {
+            TileToBePlaced.LayerId = layerId;
         }
     }
 }

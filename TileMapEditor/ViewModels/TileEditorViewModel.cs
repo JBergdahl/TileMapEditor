@@ -23,6 +23,7 @@ namespace TileMapEditor.ViewModels
 
         private string _tileSetPath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png";
 
+        public AsyncRelayCommand TileSetImageClickedCommand { get; set; }
 
         private int _rows;
         private int _columns;
@@ -57,7 +58,7 @@ namespace TileMapEditor.ViewModels
                 {
                     Tiles.Add(new Tile
                     {
-                        //TileId = new int[r, c], NEEDED?!?!?!
+                        //TileId = new int[r, c], NEEDED?!?!
                         ImageId = imageIdCounter,
                         ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png",
                         CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage, 

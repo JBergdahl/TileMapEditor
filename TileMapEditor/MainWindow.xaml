@@ -47,8 +47,17 @@
                 Width="5"
                 Background="Black" />
             <Grid Grid.Column="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <views:TileView
+                    x:Name="TileView"
+                    Grid.Row="0"
+                    DataContext="{Binding TileViewModel}" />
                 <views:TileEditorView
                     x:Name="TileEditorView"
+                    Grid.Row="1"
                     DataContext="{Binding TileEditorViewModel}" />
             </Grid>
         </Grid>

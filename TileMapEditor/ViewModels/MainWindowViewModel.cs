@@ -8,11 +8,13 @@ namespace TileMapEditor.ViewModels
     {
         private GridEditorViewModel _gridEditorViewModel;
         private TileEditorViewModel _tileEditorViewModel;
+        private TileViewModel _tileViewModel;
 
         public MainWindowViewModel()
         {
             GridEditorViewModel = new GridEditorViewModel();
             TileEditorViewModel = new TileEditorViewModel();
+            TileViewModel = new TileViewModel();
         }
 
         public GridEditorViewModel GridEditorViewModel
@@ -25,6 +27,28 @@ namespace TileMapEditor.ViewModels
         {
             get => _tileEditorViewModel;
             set => SetProperty(ref _tileEditorViewModel, value);
+        }
+
+        public TileViewModel TileViewModel
+        {
+            get => _tileViewModel;
+            set
+            {
+                if (_tileViewModel is not null)
+                {
+
+                }
+
+                if (SetProperty(ref _tileViewModel, value))
+                {
+                    if (_tileViewModel is not null)
+                    {
+                        _tileViewModel.SelectedTileChanged += GridEditorViewModel.OnSelectedTileChanged;
+                        _tileViewModel.SelectedTileCollidableChanged += GridEditorViewModel.OnSelectedTileCollidableChanged;
+                        _tileViewModel.SelectedTileLayerChanged += GridEditorViewModel.OnSelectedTileLayerChanged;
+                    }
+                }
+            }
         }
     }
 }

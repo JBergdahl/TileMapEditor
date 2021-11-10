@@ -33,23 +33,12 @@ namespace TileMapEditor.Views
 
         public event EventHandler<int[,]> TileElementPressed;
 
-        private void UIElement_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            /*
-            var image = (Image)sender;
-            image.Source =
-                new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"));
-            SelectedImage = image;
-            TileId = (int[,])image.Tag;
-            TileElementPressed?.Invoke(this, TileId);
-            */
-        }
-
         private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             var image = (Image)sender;
 
             if (SelectedImage is null) return;
+
             image.Source = SelectedImage.Source;
             TileId = (int[,])image.Tag;
             TileElementPressed?.Invoke(this, TileId);
