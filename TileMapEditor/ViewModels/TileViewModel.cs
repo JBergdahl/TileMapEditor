@@ -12,19 +12,31 @@ namespace TileMapEditor.ViewModels
     {
         public TileViewModel()
         {
-            FillEmptySpaceCommand = new AsyncRelayCommand(OnFillEmptySpaceCommand);
+            FillEmptySpaceCommand = new RelayCommand(OnFillEmptySpaceCommand);
         }
 
-        public AsyncRelayCommand FillEmptySpaceCommand { get; set; }
+        public RelayCommand FillEmptySpaceCommand { get; set; }
 
-        private async Task OnFillEmptySpaceCommand()
+        public event EventHandler<Tile> FillEmptyGridSpaceWithSelectedTile;
+        private void OnFillEmptySpaceCommand()
         {
-            // Fill empty space
+            var tileToSend = new Tile
+            {
+                ImageId = ImageId,
+                IsCollidable = IsCollidable,
+                LayerId = LayerId ? 0 : 1,
+                Image = Image,
+                ImageSource = ImageSource
+            };
+
+            FillEmptyGridSpaceWithSelectedTile?.Invoke(this, tileToSend);
         }
 
         private bool _isCollidable;
         private bool _layerId;
         private ImageSource _imageSource;
+        private int _imageId;
+        private Image _image;
 
         public ImageSource ImageSource
         {
@@ -43,6 +55,18 @@ namespace TileMapEditor.ViewModels
                     SelectedTileCollidableChanged?.Invoke(this, _isCollidable);
                 }
             }
+        }
+
+        public int ImageId
+        {
+            get => _imageId;
+            set => SetProperty(ref _imageId, value);
+        }
+
+        public Image Image
+        {
+            get => _image;
+            set => SetProperty(ref _image, value);
         }
 
         public event EventHandler<int> SelectedTileLayerChanged;
@@ -64,6 +88,8 @@ namespace TileMapEditor.ViewModels
             ImageSource = tile.ImageSource;
             IsCollidable = false;
             LayerId = true;
+            ImageId = tile.ImageId;
+            Image = tile.Image;
 
             var tileToSend = new Tile
             {

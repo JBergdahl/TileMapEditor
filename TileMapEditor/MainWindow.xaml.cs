@@ -33,17 +33,13 @@ namespace TileMapEditor
             var mainWindow = new MainWindowViewModel();
             DataContext = mainWindow;
 
-            if (GridEditorView is not null && mainWindow.GridEditorViewModel is not null)
+            if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
-                GridEditorView.TileElementPressed += mainWindow.GridEditorViewModel.OnTileElementPressed;
+                GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
+                gridEditorViewModel.ImageSourceBottomLayerChanged += GridEditorView.OnImageSourceBottomLayerChanged;
+                gridEditorViewModel.ImageSourceTopLayerChanged += GridEditorView.OnImageSourceTopLayerChanged;
             }
 
-            if (TileEditorView is not null && GridEditorView is not null)
-            {
-                TileEditorView.SelectedCroppedImageChanged += GridEditorView.OnSelectedCroppedImageChanged;
-            }
-
-            
             if (TileEditorView is not null && mainWindow.TileViewModel is { } tileViewModel)
             {
                 TileEditorView.SelectedCroppedImageChanged += tileViewModel.OnSelectedCroppedImageChanged;

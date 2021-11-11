@@ -5,14 +5,12 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace TileMapEditor.Models
 {
-    public class Tile
+    public class GridEditorModel
     {
         public int[,] TileId { get; set; }
         public int ImageId { get; set; }
-        public BitmapSource CroppedTileSetImage { get; set; }
-        public string ImagePath { get; set; }
-        public ImageSource ImageSource { get; set; }
-        public Image Image { get; set; }
+        public ImageSource ImageSourceBottomLayer { get; set; }
+        public ImageSource ImageSourceTopLayer { get; set; }
         public bool IsCollidable { get; set; }
         public int LayerId { get; set; }
     }

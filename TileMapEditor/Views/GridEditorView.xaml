@@ -21,44 +21,25 @@
         <ItemsControl
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            ItemsSource="{Binding Tiles, UpdateSourceTrigger=PropertyChanged}">
+            ItemsSource="{Binding GridTiles}">
             <ItemsControl.Resources>
-                <DataTemplate DataType="{x:Type models:Tile}">
-                    <Button
-                        Width="64"
-                        Height="64">
-                        <Image
-                            Margin="1"
+                <DataTemplate DataType="{x:Type models:GridEditorModel}">
+                    <Border
+                        BorderBrush="White"
+                        BorderThickness="1">
+                        <Grid
+                            Width="64"
+                            Height="64"
                             PreviewMouseLeftButtonDown="TileElement_OnPreviewMouseDown"
-                            Source="{Binding ImagePath}"
-                            Stretch="Fill"
                             Tag="{Binding TileId}">
-                            <!--  MouseRightButtonDown="UIElement_OnPreviewMouseRightButtonDown"  -->
-                        </Image>
-                        <Button.Style>
-                            <Style TargetType="{x:Type Button}">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="{x:Type Button}">
-                                            <Border
-                                                x:Name="Border"
-                                                Background="White">
-                                                <ContentPresenter
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center" />
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Border" Property="BorderBrush" Value="Chartreuse" />
-                                                    <Setter TargetName="Border" Property="BorderThickness" Value="1" />
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                            <Image
+                                x:Name="BottomImage"
+                                Source="{Binding ImageSourceBottomLayer}" />
+                            <Image
+                                x:Name="TopImage"
+                                Source="{Binding ImageSourceTopLayer}" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </ItemsControl.Resources>
             <ItemsControl.ItemsPanel>

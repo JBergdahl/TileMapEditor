@@ -36,18 +36,22 @@ namespace TileMapEditor.ViewModels
             {
                 if (_tileViewModel is not null)
                 {
-
+                    _tileViewModel.SelectedTileChanged -= GridEditorViewModel.OnSelectedTileChanged;
+                    _tileViewModel.SelectedTileCollidableChanged -= GridEditorViewModel.OnSelectedTileCollidableChanged;
+                    _tileViewModel.SelectedTileLayerChanged -= GridEditorViewModel.OnSelectedTileLayerChanged;
                 }
 
-                if (SetProperty(ref _tileViewModel, value))
-                {
-                    if (_tileViewModel is not null)
-                    {
-                        _tileViewModel.SelectedTileChanged += GridEditorViewModel.OnSelectedTileChanged;
-                        _tileViewModel.SelectedTileCollidableChanged += GridEditorViewModel.OnSelectedTileCollidableChanged;
-                        _tileViewModel.SelectedTileLayerChanged += GridEditorViewModel.OnSelectedTileLayerChanged;
-                    }
-                }
+                if (!SetProperty(ref _tileViewModel, value)) return;
+                if (_tileViewModel is null) return;
+
+                _tileViewModel.SelectedTileChanged += GridEditorViewModel.OnSelectedTileChanged;
+
+                _tileViewModel.SelectedTileCollidableChanged += GridEditorViewModel.OnSelectedTileCollidableChanged;
+
+                _tileViewModel.SelectedTileLayerChanged += GridEditorViewModel.OnSelectedTileLayerChanged;
+
+                _tileViewModel.FillEmptyGridSpaceWithSelectedTile +=
+                    GridEditorViewModel.OnFillEmptyGridSpaceWithSelectedTile;
             }
         }
     }

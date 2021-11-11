@@ -27,26 +27,39 @@ namespace TileMapEditor.Views
             InitializeComponent();
         }
 
-        public int[,] TileId { get; set; }
-
-        public Image SelectedImage { get; set; }
+        public ImageSource SelectedImageBottom { get; set; }
+        public ImageSource SelectedImageTop { get; set; }
 
         public event EventHandler<int[,]> TileElementPressed;
-
         private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            var image = (Image)sender;
+            var gridTile = (Grid)sender;
+            var gridTileImages = gridTile.Children.OfType<Image>();
+            var tileImages = gridTileImages.ToList();
+            var bottomImage = tileImages.Find(x => x.Name == "BottomImage");
+            var topImage = tileImages.Find(x => x.Name == "TopImage");
 
-            if (SelectedImage is null) return;
-
-            image.Source = SelectedImage.Source;
-            TileId = (int[,])image.Tag;
-            TileElementPressed?.Invoke(this, TileId);
+            if (bottomImage != null && SelectedImageBottom != null)
+            {
+                bottomImage.Source = SelectedImageBottom;
+            }
+            if (topImage != null && SelectedImageTop != null)
+            {
+                topImage.Source = SelectedImageTop;
+            }
+            TileElementPressed?.Invoke(this, (int[,])gridTile.Tag);
         }
 
-        public void OnSelectedCroppedImageChanged(object? sender, Tile tile)
+        public void OnImageSourceBottomLayerChanged(object? sender, ImageSource imageSource)
         {
-            SelectedImage = tile.Image;
+            SelectedImageBottom = imageSource;
+            SelectedImageTop = null;
+        }
+
+        public void OnImageSourceTopLayerChanged(object? sender, ImageSource imageSource)
+        {
+            SelectedImageTop = imageSource;
+            SelectedImageBottom = null;
         }
     }
 }

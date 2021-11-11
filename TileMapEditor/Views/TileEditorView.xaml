@@ -15,7 +15,6 @@
         <Grid Margin="10,50,10,10">
             <Grid.Resources>
                 <Style TargetType="{x:Type Image}">
-                    <Setter Property="Stretch" Value="Fill" />
                     <Setter Property="Margin" Value="0" />
                 </Style>
             </Grid.Resources>
