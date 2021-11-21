@@ -12,12 +12,6 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <Grid>
-        <Button
-            Width="50"
-            Height="50"
-            VerticalAlignment="Top"
-            Command="{Binding PrintInfo}"
-            Content="Print" />
         <ItemsControl
             x:Name="GridtilesFromGridEditorVM"
             HorizontalAlignment="Center"
@@ -31,8 +25,8 @@
                         <Grid
                             Width="32"
                             Height="32"
-                            PreviewMouseRightButtonDown="TileElement_OnPreviewMouseRightButtonDown"
                             PreviewMouseLeftButtonDown="TileElement_OnPreviewMouseDown"
+                            PreviewMouseRightButtonDown="TileElement_OnPreviewMouseRightButtonDown"
                             Tag="{Binding TileId}">
                             <Image
                                 x:Name="BottomImage"

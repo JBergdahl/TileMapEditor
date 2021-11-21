@@ -1,33 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Microsoft.Toolkit.Mvvm.DependencyInjection;
 using TileMapEditor.Models;
 using TileMapEditor.ViewModels;
-using TileMapEditor.Views;
 
 namespace TileMapEditor
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainWindowViewModel mainWindow;
+        private readonly MainWindowViewModel mainWindow;
 
         public MainWindow()
         {
@@ -57,7 +41,7 @@ namespace TileMapEditor
 
         private void OnSubscribeToNewViewModels(object? sender, int e)
         {
-            if(GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
+            if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
                 GridEditorView.TileElementRightPressed += gridEditorViewModel.OnTileElementRightPressed;
@@ -99,10 +83,7 @@ namespace TileMapEditor
 
         private void Tileset_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (!Regex.IsMatch(e.Text, "^[0-9]+$"))
-            {
-                e.Handled = true;
-            }
+            if (!Regex.IsMatch(e.Text, "^[0-9]+$")) e.Handled = true;
         }
     }
 }

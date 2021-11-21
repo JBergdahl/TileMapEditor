@@ -1,31 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Mime;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Microsoft.Toolkit.Mvvm.Input;
 using TileMapEditor.Models;
 
 namespace TileMapEditor.ViewModels
 {
     public class TileEditorViewModel : ObservableObject
     {
+        private int _columns;
+        private string _imagePath;
+        private int _rows;
+        private int _tileHeight;
+        private int _tileWidth;
+
         public TileEditorViewModel(int rows, int cols, int tileWidth, int tileHeight, string tileMap)
         {
             InitTileSet(rows, cols, tileWidth, tileHeight, tileMap);
         }
-
-        private int _rows;
-        private int _columns;
-        private int _tileWidth;
-        private int _tileHeight;
-        private string _imagePath;
 
         public int Rows
         {
@@ -78,7 +71,7 @@ namespace TileMapEditor.ViewModels
                 {
                     Tiles.Add(new Tile
                     {
-                        TileId = new int[r,c],
+                        TileId = new int[r, c],
                         ImageId = imageIdCounter,
                         ImagePath = imagePath,
                         CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage,
@@ -86,12 +79,13 @@ namespace TileMapEditor.ViewModels
                     });
                     imageIdCounter++;
                     xPositionCropped++;
-                    if (xPositionCropped > tileSetBitmapImage.Width/width - 1)
+                    if (xPositionCropped > tileSetBitmapImage.Width / width - 1)
                     {
                         yPositionCropped++;
                         xPositionCropped = 0;
                     }
                 }
+
                 if (yPositionCropped > tileSetBitmapImage.Height / height - 1) break;
             }
         }
