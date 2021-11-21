@@ -36,13 +36,16 @@ namespace TileMapEditor.ViewModels
             GridCollisionCommand = new RelayCommand(OnGridCollisionCommand);
             ImportGridCommand = new RelayCommand(OnImportGridCommand);
             NewTilesetCommand = new RelayCommand(OnNewTilesetCommand);
+            NewGridCommand = new RelayCommand(OnNewGridCommand);
             IsShowingCollisionPressed += TileViewModel.OnIsShowingCollisionPressed;
+            CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
         }
 
         public RelayCommand ExportGridCommand { get; set; }
         public RelayCommand GridCollisionCommand { get; set; }
         public RelayCommand ImportGridCommand { get; set; }
         public RelayCommand NewTilesetCommand { get; set; }
+        public RelayCommand NewGridCommand { get; set; }
 
         private void CreateStandardTileset()
         {
@@ -88,6 +91,24 @@ namespace TileMapEditor.ViewModels
         {
             get => _tileHeight;
             set => SetProperty(ref _tileHeight, value);
+        }
+
+        public int GridRows
+        {
+            get => _gridRows;
+            set => SetProperty(ref _gridRows, value);
+        }
+
+        public int GridColumns
+        {
+            get => _gridColumns;
+            set => SetProperty(ref _gridColumns, value);
+        }
+
+        public SolidColorBrush CollisionButtonBackground
+        {
+            get => _collisionButtonBackground;
+            set => SetProperty(ref _collisionButtonBackground, value);
         }
 
         private void OnNewTilesetCommand()
@@ -138,6 +159,29 @@ namespace TileMapEditor.ViewModels
                 (int)image.Width / TileWidth,
                 TileWidth, TileHeight, path);
             GridEditorViewModel = new GridEditorViewModel(GridEditorViewModel.Rows, GridEditorViewModel.Columns);
+            TileViewModel = new TileViewModel();
+            SubscribeToNewViewModels?.Invoke(this, 0);
+        }
+
+        private void OnNewGridCommand()
+        {
+            if (GridRows is 0 || GridColumns is 0) return;
+            var result = MessageBox.Show("Do you want to save current map?",
+                $"tilemap_{GridEditorViewModel.Rows}x{GridEditorViewModel.Columns}_",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Cancel) return;
+
+            if (result == MessageBoxResult.Yes) OnExportGridCommand();
+
+            var image = new BitmapImage(new Uri(TileEditorViewModel.ImagePath));
+            UnsubscribeToOldViewModels?.Invoke(this, 0);
+            TileEditorViewModel = new TileEditorViewModel(
+                (int)image.Height / TileEditorViewModel.TileHeight,
+                (int)image.Width / TileEditorViewModel.TileWidth,
+                TileEditorViewModel.TileWidth, TileEditorViewModel.TileHeight, TileEditorViewModel.ImagePath);
+            GridEditorViewModel = new GridEditorViewModel(GridRows, GridColumns);
             TileViewModel = new TileViewModel();
             SubscribeToNewViewModels?.Invoke(this, 0);
         }
@@ -196,6 +240,9 @@ namespace TileMapEditor.ViewModels
         private int _tileWidth;
         private int _tileHeight;
         private string _standardTilesetPath;
+        private SolidColorBrush _collisionButtonBackground;
+        private int _gridRows;
+        private int _gridColumns;
 
         public event EventHandler<bool> IsShowingCollisionPressed;
         private void OnGridCollisionCommand()
@@ -219,6 +266,7 @@ namespace TileMapEditor.ViewModels
                                                 "../../../Images/Collision.png"));
                 }
 
+                CollisionButtonBackground = new SolidColorBrush(Colors.Red);
                 GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
                 GridEditorViewModel = old;
             }
@@ -234,6 +282,7 @@ namespace TileMapEditor.ViewModels
                     _tempImages.RemoveAt(0);
                 }
 
+                CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
                 GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
                 GridEditorViewModel = old;
             }
@@ -301,7 +350,31 @@ namespace TileMapEditor.ViewModels
         public GridEditorViewModel GridEditorViewModel
         {
             get => _gridEditorViewModel;
-            set => SetProperty(ref _gridEditorViewModel, value);
+            set
+            {
+                if (_gridEditorViewModel is not null)
+                {
+                    GridEditorViewModel.UpdateNeighbourTiles -= OnUpdateNeighbourTiles;
+                }
+                if (!SetProperty(ref _gridEditorViewModel, value)) return;
+                GridEditorViewModel.UpdateNeighbourTiles += OnUpdateNeighbourTiles;
+            }
+        }
+
+        private void OnUpdateNeighbourTiles(object? sender, List<GridEditorModel> tiles)
+        {
+            foreach (var tile in tiles)
+            {
+                if (tile is not null && tile.ImageIdBottom != -1)
+                {
+                    tile.ImageSourceBottomLayer = TileEditorViewModel.Tiles.Find(x => x.ImageId == tile.ImageIdBottom)
+                        ?.CroppedTileSetImage;
+                }
+            }
+
+            var old = GridEditorViewModel;
+            GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
+            GridEditorViewModel = old;
         }
 
         public TileEditorViewModel TileEditorViewModel

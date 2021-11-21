@@ -31,6 +31,7 @@
                         <Grid
                             Width="32"
                             Height="32"
+                            PreviewMouseRightButtonDown="TileElement_OnPreviewMouseRightButtonDown"
                             PreviewMouseLeftButtonDown="TileElement_OnPreviewMouseDown"
                             Tag="{Binding TileId}">
                             <Image

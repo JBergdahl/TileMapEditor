@@ -11,6 +11,7 @@
     Width="1280"
     Height="720"
     d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
+    WindowState="Maximized"
     mc:Ignorable="d">
     <Grid>
         <Rectangle
@@ -40,6 +41,33 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
+                    <Grid.Resources>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Background" Value="LightBlue" />
+                            <Setter Property="Margin" Value="2,0,2,0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border
+                                            x:Name="Border"
+                                            Background="{TemplateBinding Background}">
+                                            <ContentPresenter
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#00b300" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="False">
+                                                <Setter TargetName="Border" Property="Background" Value="DarkSeaGreen" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Grid.Resources>
                     <Button
                         Grid.Row="0"
                         Width="100"
@@ -61,13 +89,82 @@
                         Grid.Row="3"
                         Width="100"
                         Height="50"
+                        Background="{Binding CollisionButtonBackground}"
                         Command="{Binding GridCollisionCommand}"
-                        Content="Grid collisions" />
-                    <Button
+                        Content="Grid collisions">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}">
+                                <Setter Property="Background" Value="LightBlue" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type Button}">
+                                            <Border
+                                                x:Name="Border"
+                                                Background="{TemplateBinding Background}">
+                                                <ContentPresenter
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#00b300" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Grid
                         Grid.Row="4"
-                        Width="100"
-                        Height="50"
-                        Content="Clear grid" />
+                        Margin="0,20,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="5"
+                            HorizontalAlignment="Right"
+                            Text="Grid rows" />
+                        <TextBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Width="50"
+                            Margin="5"
+                            HorizontalAlignment="Left"
+                            PreviewTextInput="Tileset_OnPreviewTextInput"
+                            Text="{Binding GridRows, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="5"
+                            HorizontalAlignment="Right"
+                            Text="Grid columns" />
+                        <TextBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Width="50"
+                            Margin="5"
+                            HorizontalAlignment="Left"
+                            PreviewTextInput="Tileset_OnPreviewTextInput"
+                            Text="{Binding GridColumns, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Width="100"
+                            Height="50"
+                            Command="{Binding NewGridCommand}"
+                            Content="New grid" />
+                    </Grid>
                 </Grid>
             </Grid>
             <GridSplitter

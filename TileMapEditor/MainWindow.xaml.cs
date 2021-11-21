@@ -40,6 +40,7 @@ namespace TileMapEditor
             if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
+                GridEditorView.TileElementRightPressed += gridEditorViewModel.OnTileElementRightPressed;
                 gridEditorViewModel.ImageSourceBottomLayerChanged += GridEditorView.OnImageSourceBottomLayerChanged;
                 gridEditorViewModel.ImageSourceTopLayerChanged += GridEditorView.OnImageSourceTopLayerChanged;
 
@@ -59,6 +60,7 @@ namespace TileMapEditor
             if(GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
+                GridEditorView.TileElementRightPressed += gridEditorViewModel.OnTileElementRightPressed;
                 gridEditorViewModel.ImageSourceBottomLayerChanged += GridEditorView.OnImageSourceBottomLayerChanged;
                 gridEditorViewModel.ImageSourceTopLayerChanged += GridEditorView.OnImageSourceTopLayerChanged;
             }
@@ -75,6 +77,7 @@ namespace TileMapEditor
             if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed -= gridEditorViewModel.OnTileElementPressed;
+                GridEditorView.TileElementRightPressed -= gridEditorViewModel.OnTileElementRightPressed;
                 gridEditorViewModel.ImageSourceBottomLayerChanged -= GridEditorView.OnImageSourceBottomLayerChanged;
                 gridEditorViewModel.ImageSourceTopLayerChanged -= GridEditorView.OnImageSourceTopLayerChanged;
             }

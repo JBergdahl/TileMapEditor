@@ -7,16 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Images\Bild.png" />
     <None Remove="Images\Collision.png" />
     <None Remove="Images\Empty.png" />
     <None Remove="Images\tilemap.png" />
     <None Remove="Images\Tileset_1_64x64.png" />
-    <None Remove="Images\Utennavn.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Images\Bild.png" />
     <Resource Include="Images\Collision.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -27,9 +24,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\Tileset_1_64x64.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Utennavn.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
