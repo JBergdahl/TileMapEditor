@@ -8,7 +8,8 @@ namespace TileMapEditor.Models
     public class GridEditorModel
     {
         public int[,] TileId { get; set; }
-        public int ImageId { get; set; }
+        public int ImageIdBottom { get; set; }
+        public int ImageIdTop { get; set; }
         public ImageSource ImageSourceBottomLayer { get; set; }
         public ImageSource ImageSourceTopLayer { get; set; }
         public bool IsCollidable { get; set; }

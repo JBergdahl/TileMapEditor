@@ -81,7 +81,7 @@
                 Grid.Column="0"
                 HorizontalAlignment="Right"
                 Text="Layer:"
-                ToolTip="Another tile can be placed upon this tile.&#x0a;Check for bottom layer, eg. floor.&#x0a;Uncheck for walls and items." />
+                ToolTip="Another tile can be placed upon this tile.&#x0a;Check for bottom layer, eg. floor and walls.&#x0a;Uncheck for items and objects." />
             <CheckBox
                 x:Name="CollidableCheckbox"
                 Grid.Row="1"
@@ -93,7 +93,7 @@
                 Grid.Row="2"
                 Grid.Column="1"
                 IsChecked="{Binding LayerId}"
-                ToolTip="Another tile can be placed upon this tile.&#x0a;Check for bottom layer, eg. floor.&#x0a;Uncheck for walls and items." />
+                ToolTip="Another tile can be placed upon this tile.&#x0a;Check for bottom layer, eg. floor and walls.&#x0a;Uncheck for items and objects." />
         </Grid>
     </Grid>
 </UserControl>

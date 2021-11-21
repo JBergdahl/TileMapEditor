@@ -16,17 +16,16 @@ namespace TileMapEditor.ViewModels
 {
     public class TileEditorViewModel : ObservableObject
     {
-        public TileEditorViewModel()
+        public TileEditorViewModel(int rows, int cols, int tileWidth, int tileHeight, string tileMap)
         {
-            InitTileSet(8, 8);
+            InitTileSet(rows, cols, tileWidth, tileHeight, tileMap);
         }
-
-        private string _tileSetPath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png";
-
-        public AsyncRelayCommand TileSetImageClickedCommand { get; set; }
 
         private int _rows;
         private int _columns;
+        private int _tileWidth;
+        private int _tileHeight;
+        private string _imagePath;
 
         public int Rows
         {
@@ -40,17 +39,38 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _columns, value);
         }
 
+        public int TileWidth
+        {
+            get => _tileWidth;
+            set => SetProperty(ref _tileWidth, value);
+        }
+
+        public int TileHeight
+        {
+            get => _tileHeight;
+            set => SetProperty(ref _tileHeight, value);
+        }
+
+        public string ImagePath
+        {
+            get => _imagePath;
+            set => SetProperty(ref _imagePath, value);
+        }
+
         public List<Tile> Tiles { get; set; } = new();
 
-        private void InitTileSet(int rows, int cols)
+        private void InitTileSet(int rows, int cols, int width, int height, string imagePath)
         {
-            var tileSetBitmapImage = new BitmapImage(new Uri(_tileSetPath));
+            var tileSetBitmapImage = new BitmapImage(new Uri(imagePath));
             var xPositionCropped = 0;
             var yPositionCropped = 0;
             var imageIdCounter = 0;
 
             Rows = rows;
             Columns = cols;
+            TileWidth = width;
+            TileHeight = height;
+            ImagePath = imagePath;
 
             for (var r = 0; r < rows; r++)
             {
@@ -58,62 +78,22 @@ namespace TileMapEditor.ViewModels
                 {
                     Tiles.Add(new Tile
                     {
-                        //TileId = new int[r, c], NEEDED?!?!
+                        TileId = new int[r,c],
                         ImageId = imageIdCounter,
-                        ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Tileset_1_64x64.png",
-                        CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage, 
-                            new Int32Rect(xPositionCropped * 64, yPositionCropped * 64, 64,64))
+                        ImagePath = imagePath,
+                        CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage,
+                            new Int32Rect(xPositionCropped * width, yPositionCropped * height, width, height))
                     });
-
                     imageIdCounter++;
-                    yPositionCropped++;
-                    if (xPositionCropped == 1 && yPositionCropped is >= 2 and <= 4) xPositionCropped++;
-                    if (xPositionCropped != 5 && yPositionCropped == 2) yPositionCropped++;
-
-                    while (xPositionCropped == 11 && yPositionCropped is 2 or 3 or 4) yPositionCropped++;
-                    while (xPositionCropped == 13 && yPositionCropped is 1 or 2) yPositionCropped++;
-
-                    if (yPositionCropped > 4)
+                    xPositionCropped++;
+                    if (xPositionCropped > tileSetBitmapImage.Width/width - 1)
                     {
-                        xPositionCropped++;
-                        if (xPositionCropped is 4 or 6 or 17) xPositionCropped++;
-                        yPositionCropped = 0;
-                    }
-
-                    while (xPositionCropped == 10 && yPositionCropped is 0 or 1 or 2) yPositionCropped++;
-                    while (xPositionCropped == 12 && yPositionCropped is 0 or 1 or 2) yPositionCropped++;
-                    while (xPositionCropped == 18 && yPositionCropped is 0 or 1 or 2) yPositionCropped++;
-                    while (xPositionCropped == 19 && yPositionCropped is 0 or 1 or 2) yPositionCropped++;
-
-                    if (xPositionCropped >= 20)
-                    {
-                        Tiles.Add(new Tile
-                        {
-                            //TileId = new int[r, c], NEEDED?!?!?!
-                            ImageId = -1,
-                            ImagePath = AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png",
-                            CroppedTileSetImage = new CroppedBitmap(new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png")), Int32Rect.Empty)
-                        });
-                        c = 8;
-                        r = 8;
+                        yPositionCropped++;
+                        xPositionCropped = 0;
                     }
                 }
+                if (yPositionCropped > tileSetBitmapImage.Height / height - 1) break;
             }
-
-            Swap(Tiles, 6, 12);
-            Swap(Tiles, 7, 13);
-            Swap(Tiles, 16, 23);
-            Swap(Tiles, 19, 25);
-            Swap(Tiles, 20, 26);
-            Swap(Tiles, 33, 42);
-            Swap(Tiles, 34, 43);
-            Swap(Tiles, 36, 46);
-            Swap(Tiles, 37, 47);
-        }
-
-        public static void Swap<T>(IList<T> list, int indexA, int indexB)
-        {
-            (list[indexA], list[indexB]) = (list[indexB], list[indexA]);
         }
     }
 }

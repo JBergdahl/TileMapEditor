@@ -15,5 +15,7 @@ namespace TileMapEditor.Models
         public Image Image { get; set; }
         public bool IsCollidable { get; set; }
         public int LayerId { get; set; }
+        public int TileWidth { get; set; }
+        public int TileHeight { get; set; }
     }
 }

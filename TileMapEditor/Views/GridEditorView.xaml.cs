@@ -25,14 +25,17 @@ namespace TileMapEditor.Views
         public GridEditorView()
         {
             InitializeComponent();
+            CanEditTileGrid = true;
         }
 
         public ImageSource SelectedImageBottom { get; set; }
         public ImageSource SelectedImageTop { get; set; }
+        private bool CanEditTileGrid { get; set; }
 
         public event EventHandler<int[,]> TileElementPressed;
-        private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
+            if (!CanEditTileGrid) return;
             var gridTile = (Grid)sender;
             var gridTileImages = gridTile.Children.OfType<Image>();
             var tileImages = gridTileImages.ToList();
@@ -47,6 +50,7 @@ namespace TileMapEditor.Views
             {
                 topImage.Source = SelectedImageTop;
             }
+
             TileElementPressed?.Invoke(this, (int[,])gridTile.Tag);
         }
 
@@ -60,6 +64,11 @@ namespace TileMapEditor.Views
         {
             SelectedImageTop = imageSource;
             SelectedImageBottom = null;
+        }
+
+        public void OnIsShowingCollisionPressed(object? sender, bool e)
+        {
+            CanEditTileGrid = e;
         }
     }
 }

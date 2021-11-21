@@ -24,7 +24,7 @@
                 ItemsSource="{Binding Tiles}">
                 <ItemsControl.Resources>
                     <DataTemplate DataType="{x:Type models:Tile}">
-                        <Button>
+                        <Button Background="Black">
                             <Image
                                 Width="32"
                                 Height="32"

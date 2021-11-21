@@ -13,6 +13,7 @@ namespace TileMapEditor.ViewModels
         public TileViewModel()
         {
             FillEmptySpaceCommand = new RelayCommand(OnFillEmptySpaceCommand);
+            CanEditTileGrid = true;
         }
 
         public RelayCommand FillEmptySpaceCommand { get; set; }
@@ -20,16 +21,19 @@ namespace TileMapEditor.ViewModels
         public event EventHandler<Tile> FillEmptyGridSpaceWithSelectedTile;
         private void OnFillEmptySpaceCommand()
         {
-            var tileToSend = new Tile
+            if (CanEditTileGrid)
             {
-                ImageId = ImageId,
-                IsCollidable = IsCollidable,
-                LayerId = LayerId ? 0 : 1,
-                Image = Image,
-                ImageSource = ImageSource
-            };
+                var tileToSend = new Tile
+                {
+                    ImageId = ImageId,
+                    IsCollidable = IsCollidable,
+                    LayerId = LayerId ? 0 : 1,
+                    Image = Image,
+                    ImageSource = ImageSource
+                };
 
-            FillEmptyGridSpaceWithSelectedTile?.Invoke(this, tileToSend);
+                FillEmptyGridSpaceWithSelectedTile?.Invoke(this, tileToSend);
+            }
         }
 
         private bool _isCollidable;
@@ -99,6 +103,12 @@ namespace TileMapEditor.ViewModels
             };
 
             SelectedTileChanged?.Invoke(this, tileToSend);
+        }
+
+        private bool CanEditTileGrid { get; set; }
+        public void OnIsShowingCollisionPressed(object? sender, bool e)
+        {
+            CanEditTileGrid = e;
         }
     }
 }
