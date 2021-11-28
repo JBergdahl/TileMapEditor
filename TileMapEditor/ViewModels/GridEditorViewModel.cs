@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
@@ -131,12 +130,12 @@ namespace TileMapEditor.ViewModels
                 x => x.TilePositionOnGrid.X.Equals(tilePositionOnGrid.X) &&
                      x.TilePositionOnGrid.Y.Equals(tilePositionOnGrid.Y));
 
-            if (tileOnGrid is not { ImageIdBottom: not 15 })
+            CollectionViewSource.GetDefaultView(MapTiles).Refresh();
+
+            if (tileOnGrid == null)
             {
                 return;
             }
-
-            CollectionViewSource.GetDefaultView(MapTiles).Refresh();
 
             tileOnGrid.IsCollidable = IsCollidable;
 
@@ -194,17 +193,16 @@ namespace TileMapEditor.ViewModels
                 x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
                 x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
 
-            UpdateTilesAbovePressedTile(tileOnGridAbovePressedTile, tileOnGridAboveRightOfPressedTile, tileOnGridAboveLeftOfPressedTile);
+            UpdateTilesAbovePressedTile(tileOnGridAbovePressedTile);
             listOfNeighbourTiles.Add(tileOnGridAbovePressedTile);
 
-            UpdateTilesBelowPressedTile(tileOnGridBelowPressedTile, tileOnGridBelowRightOfPressedTile, tileOnGridBelowLeftOfPressedTile);
+            UpdateTilesBelowPressedTile(tileOnGridBelowPressedTile);
             listOfNeighbourTiles.Add(tileOnGridBelowPressedTile);
 
-            UpdateTilesRightOfPressedTile(tileOnGridRightOfPressedTile, tileOnGridAboveRightOfPressedTile, tileOnGridBelowRightOfPressedTile);
+            UpdateTilesRightOfPressedTile(tileOnGridRightOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridRightOfPressedTile);
 
-            UpdateTilesLeftOfPressedTile(tileOnGridLeftOfPressedTile, tileOnGridAboveLeftOfPressedTile,
-                tileOnGridBelowLeftOfPressedTile);
+            UpdateTilesLeftOfPressedTile(tileOnGridLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridLeftOfPressedTile);
 
             UpdateTileAboveLeftOfPressedTile(tileOnGridAboveLeftOfPressedTile);
@@ -216,15 +214,7 @@ namespace TileMapEditor.ViewModels
             UpdateTileBelowLeftOfPressedTile(tileOnGridBelowLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridBelowLeftOfPressedTile);
 
-            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: Empty or Water })
-            {
-                tileOnGridBelowLeftOfPressedTile.ImageIdBottom = BottomLeftCoast;
-            }
-
-            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: Empty or Water })
-            {
-                tileOnGridBelowRightOfPressedTile.ImageIdBottom = BottomRightCoast;
-            }
+            UpdateTileBelowRightOfPressedTile(tileOnGridBelowRightOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridBelowRightOfPressedTile);
 
             UpdateNeighbourTiles?.Invoke(this, listOfNeighbourTiles);
@@ -355,56 +345,56 @@ namespace TileMapEditor.ViewModels
                 x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
                 x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
 
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: TopCoast })
+            if (tileOnGridAbovePressedTile is { })
             {
                 tileOnGridAbovePressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridAbovePressedTile);
 
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: BottomCoast })
+            if (tileOnGridBelowPressedTile is { })
             {
                 tileOnGridBelowPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridBelowPressedTile);
 
-            if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: TopLeftCoast })
+            if (tileOnGridAboveLeftOfPressedTile is { })
             {
                 tileOnGridAboveLeftOfPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridAboveLeftOfPressedTile);
 
-            if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: TopRightCoast })
+            if (tileOnGridAboveRightOfPressedTile is { })
             {
                 tileOnGridAboveRightOfPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridAboveRightOfPressedTile);
 
-            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: BottomLeftCoast })
+            if (tileOnGridBelowLeftOfPressedTile is { })
             {
                 tileOnGridBelowLeftOfPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridBelowLeftOfPressedTile);
 
-            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: BottomRightCoast })
+            if (tileOnGridBelowRightOfPressedTile is { })
             {
                 tileOnGridBelowRightOfPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridBelowRightOfPressedTile);
 
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 16 })
+            if (tileOnGridRightOfPressedTile is { })
             {
                 tileOnGridRightOfPressedTile.ImageIdBottom = Empty;
             }
 
             listOfNeighbourTiles.Add(tileOnGridRightOfPressedTile);
 
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: LeftCoast })
+            if (tileOnGridLeftOfPressedTile is { })
             {
                 tileOnGridLeftOfPressedTile.ImageIdBottom = Empty;
             }
@@ -420,104 +410,50 @@ namespace TileMapEditor.ViewModels
             UpdateNeighbourTiles?.Invoke(this, listOfNeighbourTiles);
         }
 
-        private static void UpdateTilesAbovePressedTile(MapTile above, MapTile aboveRight, MapTile aboveLeft)
+        private static void UpdateTilesAbovePressedTile(MapTile above)
         {
             switch (above)
             {
-                case
-                {
-                    ImageIdBottom: not BottomRightCornerCoast and not BottomLeftCornerCoast and not LeftCoast and not
-                    PlainGrass and not RightCoast and not BottomCoast
-                }:
+                case { ImageIdBottom: Water or Empty or TopRightCoast or TopLeftCoast }:
                     above.ImageIdBottom = TopCoast;
                     break;
-
                 case { ImageIdBottom: BottomRightCornerCoast }:
                     above.ImageIdBottom = PlainGrass;
-                    if (aboveRight is { ImageIdBottom: Empty or BottomLeftCoast or BottomRightCoast })
-                    {
-                        aboveRight.ImageIdBottom = RightCoast;
-                    }
-                    else if (aboveRight is { ImageIdBottom: BottomCoast })
-                    {
-                        aboveRight.ImageIdBottom = BottomRightCornerCoast;
-                    }
-                    else
-                    {
-                        aboveRight.ImageIdBottom = aboveRight.ImageIdBottom;
-                    }
-
                     break;
-
                 case { ImageIdBottom: BottomLeftCornerCoast }:
-                {
                     above.ImageIdBottom = PlainGrass;
-                    if (aboveLeft is { ImageIdBottom: Empty or BottomLeftCoast or BottomRightCoast })
-                    {
-                        aboveLeft.ImageIdBottom = LeftCoast;
-                    }
-                    else if (aboveLeft is { ImageIdBottom: BottomCoast })
-                    {
-                        aboveLeft.ImageIdBottom = BottomLeftCornerCoast;
-                    }
                     break;
-                }
-
+                case { ImageIdBottom: BottomLeftCoast }:
+                    above.ImageIdBottom = TopLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomRightCoast }:
+                    above.ImageIdBottom = TopRightCornerCoast;
+                    break;
                 case { ImageIdBottom: BottomCoast }:
                     above.ImageIdBottom = PlainGrass;
                     break;
-
                 case { ImageIdBottom: LeftCoast }:
                     above.ImageIdBottom = TopLeftCornerCoast;
                     break;
-
                 case { ImageIdBottom: RightCoast }:
                     above.ImageIdBottom = TopRightCornerCoast;
                     break;
             }
         }
 
-        private static void UpdateTilesBelowPressedTile(MapTile below, MapTile belowRight, MapTile belowLeft)
+        private static void UpdateTilesBelowPressedTile(MapTile below)
         {
             switch (below)
             {
-                case
-                {
-                    ImageIdBottom: not TopCoast and not TopLeftCornerCoast and not TopRightCornerCoast and not LeftCoast and
-                    not RightCoast and not PlainGrass
-                }:
+                case { ImageIdBottom: Water or Empty or BottomRightCoast or BottomLeftCoast }:
                     below.ImageIdBottom = BottomCoast;
                     break;
                 case { ImageIdBottom: TopLeftCornerCoast }:
-                {
                     below.ImageIdBottom = PlainGrass;
-                    if (belowLeft is { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast })
-                    {
-                        belowLeft.ImageIdBottom = LeftCoast;
-                    }
-
-                    if (belowLeft is { ImageIdBottom: TopCoast })
-                    {
-                        belowLeft.ImageIdBottom = TopLeftCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: TopRightCornerCoast }:
-                {
                     below.ImageIdBottom = PlainGrass;
-                    if (belowRight is { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast })
-                    {
-                        belowRight.ImageIdBottom = RightCoast;
-                    }
-
-                    if (belowRight is { ImageIdBottom: TopCoast })
-                    {
-                        belowRight.ImageIdBottom = TopRightCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: TopCoast }:
                     below.ImageIdBottom = PlainGrass;
                     break;
@@ -527,51 +463,28 @@ namespace TileMapEditor.ViewModels
                 case { ImageIdBottom: RightCoast }:
                     below.ImageIdBottom = BottomRightCornerCoast;
                     break;
+                case { ImageIdBottom: TopLeftCoast }:
+                    below.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: TopRightCoast }:
+                    below.ImageIdBottom = BottomRightCornerCoast;
+                    break;
             }
         }
 
-        private static void UpdateTilesRightOfPressedTile(MapTile right, MapTile rightAbove, MapTile rightBelow)
+        private static void UpdateTilesRightOfPressedTile(MapTile right)
         {
             switch (right)
             {
-                case
-                {
-                    ImageIdBottom: not BottomLeftCornerCoast and not TopLeftCornerCoast and not PlainGrass and not LeftCoast
-                    and not TopCoast and not BottomCoast
-                }:
+                case { ImageIdBottom: Water or Empty or TopRightCoast or BottomRightCoast }:
                     right.ImageIdBottom = RightCoast;
                     break;
                 case { ImageIdBottom: BottomLeftCornerCoast }:
-                {
                     right.ImageIdBottom = PlainGrass;
-                    if (rightBelow is { ImageIdBottom: Empty or BottomLeftCoast or Water })
-                    {
-                        rightBelow.ImageIdBottom = BottomCoast;
-                    }
-
-                    if (rightBelow is { ImageIdBottom: LeftCoast })
-                    {
-                        rightBelow.ImageIdBottom = BottomLeftCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: TopLeftCornerCoast }:
-                {
                     right.ImageIdBottom = PlainGrass;
-                    if (rightAbove is
-                        { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast or Water })
-                    {
-                        rightAbove.ImageIdBottom = TopCoast;
-                    }
-
-                    if (rightAbove is { ImageIdBottom: LeftCoast })
-                    {
-                        rightAbove.ImageIdBottom = TopLeftCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: LeftCoast }:
                     right.ImageIdBottom = PlainGrass;
                     break;
@@ -581,51 +494,28 @@ namespace TileMapEditor.ViewModels
                 case { ImageIdBottom: BottomCoast }:
                     right.ImageIdBottom = BottomRightCornerCoast;
                     break;
+                case { ImageIdBottom: BottomLeftCoast }:
+                    right.ImageIdBottom = BottomRightCornerCoast;
+                    break;
+                case { ImageIdBottom: TopLeftCoast }:
+                    right.ImageIdBottom = TopRightCornerCoast;
+                    break;
             }
         }
 
-        private static void UpdateTilesLeftOfPressedTile(MapTile left, MapTile leftAbove, MapTile leftBelow)
+        private static void UpdateTilesLeftOfPressedTile(MapTile left)
         {
             switch (left)
             {
-                case
-                {
-                    ImageIdBottom: not BottomRightCornerCoast and not PlainGrass and not RightCoast and not
-                    TopRightCornerCoast and not TopCoast and not BottomCoast
-                }:
+                case { ImageIdBottom: Water or Empty or TopLeftCoast or BottomLeftCoast }:
                     left.ImageIdBottom = LeftCoast;
                     break;
                 case { ImageIdBottom: BottomRightCornerCoast }:
-                {
                     left.ImageIdBottom = PlainGrass;
-                    if (leftBelow is { ImageIdBottom: Empty or BottomRightCoast or Water })
-                    {
-                        leftBelow.ImageIdBottom = BottomCoast;
-                    }
-
-                    if (leftBelow is { ImageIdBottom: RightCoast })
-                    {
-                        leftBelow.ImageIdBottom = BottomRightCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: TopRightCornerCoast }:
-                {
                     left.ImageIdBottom = PlainGrass;
-                    if (leftAbove is
-                        { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast or Water })
-                    {
-                        leftAbove.ImageIdBottom = TopCoast;
-                    }
-
-                    if (leftAbove is { ImageIdBottom: RightCoast })
-                    {
-                        leftAbove.ImageIdBottom = TopRightCornerCoast;
-                    }
-
                     break;
-                }
                 case { ImageIdBottom: RightCoast }:
                     left.ImageIdBottom = PlainGrass;
                     break;
@@ -633,6 +523,12 @@ namespace TileMapEditor.ViewModels
                     left.ImageIdBottom = TopLeftCornerCoast;
                     break;
                 case { ImageIdBottom: BottomCoast }:
+                    left.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: TopRightCoast }:
+                    left.ImageIdBottom = TopLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomRightCoast }:
                     left.ImageIdBottom = BottomLeftCornerCoast;
                     break;
             }
@@ -645,51 +541,85 @@ namespace TileMapEditor.ViewModels
                 case { ImageIdBottom: Empty or Water }:
                     aboveLeft.ImageIdBottom = TopLeftCoast;
                     break;
-                case {ImageIdBottom: BottomCoast}:
+                case { ImageIdBottom: BottomCoast }:
                     aboveLeft.ImageIdBottom = BottomLeftCornerCoast;
                     break;
                 case { ImageIdBottom: BottomLeftCoast }:
                     aboveLeft.ImageIdBottom = LeftCoast;
+                    break;
+                case { ImageIdBottom: TopRightCoast }:
+                    aboveLeft.ImageIdBottom = TopCoast;
+                    break;
+                case { ImageIdBottom: RightCoast }:
+                    aboveLeft.ImageIdBottom = TopRightCornerCoast;
                     break;
             }
         }
 
         private static void UpdateTileAboveRightOfPressedTile(MapTile aboveRight)
         {
-            if (aboveRight is { ImageIdBottom: Empty or Water })
+            switch (aboveRight)
             {
-                aboveRight.ImageIdBottom = TopRightCoast;
-            }
-            else if (aboveRight is { ImageIdBottom: BottomCoast })
-            {
-                aboveRight.ImageIdBottom = BottomRightCornerCoast;
-            }else if (aboveRight is { ImageIdBottom: BottomRightCoast })
-            {
-                aboveRight.ImageIdBottom = RightCoast;
+                case { ImageIdBottom: Empty or Water }:
+                    aboveRight.ImageIdBottom = TopRightCoast;
+                    break;
+                case { ImageIdBottom: BottomCoast }:
+                    aboveRight.ImageIdBottom = BottomRightCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomRightCoast }:
+                    aboveRight.ImageIdBottom = RightCoast;
+                    break;
+                case { ImageIdBottom: TopLeftCoast }:
+                    aboveRight.ImageIdBottom = TopCoast;
+                    break;
+                case { ImageIdBottom: LeftCoast }:
+                    aboveRight.ImageIdBottom = TopLeftCornerCoast;
+                    break;
             }
         }
 
         private static void UpdateTileBelowLeftOfPressedTile(MapTile belowLeft)
         {
+            switch (belowLeft)
+            {
+                case { ImageIdBottom: Empty or Water }:
+                    belowLeft.ImageIdBottom = BottomLeftCoast;
+                    break;
+                case { ImageIdBottom: TopCoast }:
+                    belowLeft.ImageIdBottom = TopLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: TopLeftCoast }:
+                    belowLeft.ImageIdBottom = LeftCoast;
+                    break;
+                case { ImageIdBottom: BottomRightCoast }:
+                    belowLeft.ImageIdBottom = BottomCoast;
+                    break;
+                case { ImageIdBottom: RightCoast }:
+                    belowLeft.ImageIdBottom = BottomRightCornerCoast;
+                    break;
+            }
+        }
 
+        private static void UpdateTileBelowRightOfPressedTile(MapTile belowRight)
+        {
+            switch (belowRight)
+            {
+                case { ImageIdBottom: Empty or Water }:
+                    belowRight.ImageIdBottom = BottomRightCoast;
+                    break;
+                case { ImageIdBottom: TopCoast }:
+                    belowRight.ImageIdBottom = TopRightCornerCoast;
+                    break;
+                case { ImageIdBottom: TopRightCoast }:
+                    belowRight.ImageIdBottom = RightCoast;
+                    break;
+                case { ImageIdBottom: BottomLeftCoast }:
+                    belowRight.ImageIdBottom = BottomCoast;
+                    break;
+                case { ImageIdBottom: LeftCoast }:
+                    belowRight.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+            }
         }
     }
-}
-
-internal enum TileIndex
-{
-    TopLeftCoast = 0,
-    TopCoast = 1,
-    TopRightCoast = 2,
-    LeftCoast = 14,
-    PlainGrass = 15,
-    RightCoast = 16,
-    BottomRightCoast = 30,
-    BottomCoast = 29,
-    BottomLeftCoast = 28,
-
-    BottomRightCornerCoast = 3,
-    BottomLeftCornerCoast = 4,
-    TopRightCornerCoast = 17,
-    TopLeftCornerCoast = 18
 }

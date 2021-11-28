@@ -41,6 +41,8 @@ namespace TileMapEditor.ViewModels
             NewGridCommand = new RelayCommand(OnNewGridCommand);
             IsShowingCollisionPressed += TileViewModel.OnIsShowingCollisionPressed;
             CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
+            GridRows = 15;
+            GridColumns = 20;
         }
 
         public RelayCommand ExportGridCommand { get; set; }
@@ -351,6 +353,8 @@ namespace TileMapEditor.ViewModels
                     tile.ImageSourceBottomLayer =
                         new BitmapImage(new Uri(AssetStructure.CollisionPngPath));
                 }
+
+                CollisionButtonBackground = new SolidColorBrush(Colors.Red);
             }
             else
             {
@@ -362,7 +366,10 @@ namespace TileMapEditor.ViewModels
                     tile.ImageSourceBottomLayer = _tempImages[0];
                     _tempImages.RemoveAt(0);
                 }
+
+                CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
             }
+
             CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();
         }
 
@@ -436,6 +443,7 @@ namespace TileMapEditor.ViewModels
                         ?.CroppedTileSetImage;
                 }
             }
+
             CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();
         }
     }

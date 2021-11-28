@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using TileMapEditor.Models;
 using TileMapEditor.ViewModels;
 
 namespace TileMapEditor

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -94,7 +93,7 @@ namespace TileMapEditor.ViewModels
             var tileToSend = new Tile
             {
                 ImageSource = tile.ImageSource,
-                ImageId = tile.ImageId,
+                ImageId = tile.ImageId
             };
 
             SelectedTileChanged?.Invoke(this, tileToSend);
