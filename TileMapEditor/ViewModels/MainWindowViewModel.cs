@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -34,22 +35,24 @@ namespace TileMapEditor.ViewModels
             GridEditorViewModel = new GridEditorViewModel(15, 20);
             TilePickerViewModel = new TilePickerViewModel(10, 14, 16, 16, StandardTilesetPath);
             TileViewModel = new TileViewModel();
-            ExportGridCommand = new RelayCommand(OnExportGridCommand);
+            ExportGridCommand = new AsyncRelayCommand(OnExportGridCommand);
             GridCollisionCommand = new RelayCommand(OnGridCollisionCommand);
-            ImportGridCommand = new RelayCommand(OnImportGridCommand);
-            NewTilesetCommand = new RelayCommand(OnNewTilesetCommand);
-            NewGridCommand = new RelayCommand(OnNewGridCommand);
+            ImportGridCommand = new AsyncRelayCommand(OnImportGridCommand);
+            NewTilesetCommand = new AsyncRelayCommand(OnNewTilesetCommand);
+            NewGridCommand = new AsyncRelayCommand(OnNewGridCommand);
             IsShowingCollisionPressed += TileViewModel.OnIsShowingCollisionPressed;
             CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
             GridRows = 15;
             GridColumns = 20;
+            TileWidth = 16;
+            TileHeight = 16;
         }
 
-        public RelayCommand ExportGridCommand { get; set; }
+        public AsyncRelayCommand ExportGridCommand { get; set; }
         public RelayCommand GridCollisionCommand { get; set; }
-        public RelayCommand ImportGridCommand { get; set; }
-        public RelayCommand NewTilesetCommand { get; set; }
-        public RelayCommand NewGridCommand { get; set; }
+        public AsyncRelayCommand ImportGridCommand { get; set; }
+        public AsyncRelayCommand NewTilesetCommand { get; set; }
+        public AsyncRelayCommand NewGridCommand { get; set; }
 
         public string StandardTilesetPath
         {
@@ -178,7 +181,7 @@ namespace TileMapEditor.ViewModels
             StandardTilesetPath = path;
         }
 
-        private void OnNewTilesetCommand()
+        private async Task OnNewTilesetCommand()
         {
             if (TileHeight is 0 || TileWidth is 0)
             {
@@ -197,7 +200,7 @@ namespace TileMapEditor.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
-                OnExportGridCommand();
+                await OnExportGridCommand();
             }
 
             var op = new OpenFileDialog
@@ -222,12 +225,13 @@ namespace TileMapEditor.ViewModels
             if (File.Exists(path))
             {
                 try
-                {
+                { 
                     File.Delete(path);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("File is in use! Use another image or try again");
+                    TilePickerViewModel = new TilePickerViewModel(10, 14, 16, 16, StandardTilesetPath);
                     return;
                 }
             }
@@ -235,17 +239,31 @@ namespace TileMapEditor.ViewModels
             File.Copy(source, path);
             var image = new BitmapImage(new Uri(path));
 
-            UnsubscribeToOldViewModels?.Invoke(this, 0);
-            TilePickerViewModel = new TilePickerViewModel(
-                (int)image.Height / TileHeight,
-                (int)image.Width / TileWidth,
-                TileWidth, TileHeight, path);
-            GridEditorViewModel = new GridEditorViewModel(GridEditorViewModel.Rows, GridEditorViewModel.Columns);
-            TileViewModel = new TileViewModel();
-            SubscribeToNewViewModels?.Invoke(this, 0);
+            var newTileSetRows = (int)image.Height / TileHeight;
+            var newTileSetColumns = (int)image.Width / TileWidth;
+            var maxSizeOnTileSet = 400;
+            
+            if (newTileSetRows * newTileSetColumns >= maxSizeOnTileSet)
+            {
+                MessageBox.Show("Tile set is to big, try again with a smaller tile width and height",
+                    $"tilemap_{GridEditorViewModel.Rows}x{GridEditorViewModel.Columns}_",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            else
+            {
+                UnsubscribeToOldViewModels?.Invoke(this, 0);
+                TilePickerViewModel = new TilePickerViewModel(
+                    newTileSetRows,
+                    newTileSetColumns,
+                    TileWidth, TileHeight, path);
+                GridEditorViewModel = new GridEditorViewModel(GridEditorViewModel.Rows, GridEditorViewModel.Columns);
+                TileViewModel = new TileViewModel();
+                SubscribeToNewViewModels?.Invoke(this, 0);
+            }
         }
 
-        private void OnNewGridCommand()
+        private async Task OnNewGridCommand()
         {
             if (GridRows is 0 || GridColumns is 0)
             {
@@ -264,7 +282,7 @@ namespace TileMapEditor.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
-                OnExportGridCommand();
+                await OnExportGridCommand();
             }
 
             var image = new BitmapImage(new Uri(TilePickerViewModel.ImagePath));
@@ -278,7 +296,7 @@ namespace TileMapEditor.ViewModels
             SubscribeToNewViewModels?.Invoke(this, 0);
         }
 
-        private void OnImportGridCommand()
+        private async Task OnImportGridCommand()
         {
             var openFileDialog = new OpenFileDialog
             {
@@ -293,7 +311,7 @@ namespace TileMapEditor.ViewModels
                 return;
             }
 
-            var text = File.ReadAllText(openFileDialog.FileName);
+            var text = await File.ReadAllTextAsync(openFileDialog.FileName);
             var mainWindowModel = JsonConvert.DeserializeObject<MainWindowModel>(text);
 
             if (mainWindowModel is not { } mWm)
@@ -373,7 +391,7 @@ namespace TileMapEditor.ViewModels
             CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();
         }
 
-        private void OnExportGridCommand()
+        private async Task OnExportGridCommand()
         {
             if (GridEditorViewModel.MapTiles.Count != 0)
             {
@@ -428,20 +446,17 @@ namespace TileMapEditor.ViewModels
 
                     fs.Close();
 
-                    File.WriteAllText(path, gridTileListSerialized);
+                    await File.WriteAllTextAsync(path, gridTileListSerialized);
                 }
             }
         }
 
         private void OnUpdateNeighbourTiles(object? sender, List<MapTile> tiles)
         {
-            foreach (var tile in tiles)
+            foreach (var tile in tiles.Where(tile => tile is not null && tile.ImageIdBottom != -1))
             {
-                if (tile is not null && tile.ImageIdBottom != -1)
-                {
-                    tile.ImageSourceBottomLayer = TilePickerViewModel.Tiles.Find(x => x.ImageId == tile.ImageIdBottom)
-                        ?.CroppedTileSetImage;
-                }
+                tile.ImageSourceBottomLayer = TilePickerViewModel.Tiles.Find(x => x.ImageId == tile.ImageIdBottom)
+                    ?.CroppedTileSetImage;
             }
 
             CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();

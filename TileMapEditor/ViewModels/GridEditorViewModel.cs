@@ -137,7 +137,10 @@ namespace TileMapEditor.ViewModels
                 return;
             }
 
-            tileOnGrid.IsCollidable = IsCollidable;
+            if (!tileOnGrid.IsCollidable)
+            {
+                tileOnGrid.IsCollidable = IsCollidable;
+            }
 
             if (LayerId == 0)
             {
@@ -278,6 +281,7 @@ namespace TileMapEditor.ViewModels
             var tileOnGrid = MapTiles.FirstOrDefault(
                 x => x.TilePositionOnGrid.X.Equals(tilePositionOnGrid.X) &&
                      x.TilePositionOnGrid.Y.Equals(tilePositionOnGrid.Y));
+
 
             CollectionViewSource.GetDefaultView(MapTiles).Refresh();
 

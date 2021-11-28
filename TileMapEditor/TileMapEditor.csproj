@@ -10,7 +10,6 @@
     <None Remove="Images\Collision.png" />
     <None Remove="Images\Empty.png" />
     <None Remove="Images\tilemap.png" />
-    <None Remove="Images\Tileset_1_64x64.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,9 +20,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\tilemap.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Tileset_1_64x64.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
