@@ -9,7 +9,6 @@ namespace TileMapEditor.ViewModels
 {
     public class TileViewModel : ObservableObject
     {
-        private Image _image;
         private int _imageId;
         private ImageSource _imageSource;
         private bool _isCollidable;
@@ -20,14 +19,6 @@ namespace TileMapEditor.ViewModels
             FillEmptySpaceCommand = new RelayCommand(OnFillEmptySpaceCommand);
             CanEditTileGrid = true;
         }
-
-        public event EventHandler<Tile> FillEmptyGridSpaceWithSelectedTile;
-
-        public event EventHandler<bool> SelectedTileCollidableChanged;
-
-        public event EventHandler<int> SelectedTileLayerChanged;
-
-        public event EventHandler<Tile> SelectedTileChanged;
 
         public RelayCommand FillEmptySpaceCommand { get; set; }
 
@@ -42,7 +33,10 @@ namespace TileMapEditor.ViewModels
             get => _isCollidable;
             set
             {
-                if (SetProperty(ref _isCollidable, value)) SelectedTileCollidableChanged?.Invoke(this, _isCollidable);
+                if (SetProperty(ref _isCollidable, value))
+                {
+                    SelectedTileCollidableChanged?.Invoke(this, _isCollidable);
+                }
             }
         }
 
@@ -52,22 +46,27 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _imageId, value);
         }
 
-        public Image Image
-        {
-            get => _image;
-            set => SetProperty(ref _image, value);
-        }
-
         public bool LayerId
         {
             get => _layerId;
             set
             {
-                if (SetProperty(ref _layerId, value)) SelectedTileLayerChanged?.Invoke(this, LayerId ? 0 : 1);
+                if (SetProperty(ref _layerId, value))
+                {
+                    SelectedTileLayerChanged?.Invoke(this, LayerId ? 0 : 1);
+                }
             }
         }
 
         private bool CanEditTileGrid { get; set; }
+
+        public event EventHandler<Tile> FillEmptyGridSpaceWithSelectedTile;
+
+        public event EventHandler<bool> SelectedTileCollidableChanged;
+
+        public event EventHandler<int> SelectedTileLayerChanged;
+
+        public event EventHandler<Tile> SelectedTileChanged;
 
         private void OnFillEmptySpaceCommand()
         {
@@ -78,7 +77,6 @@ namespace TileMapEditor.ViewModels
                     ImageId = ImageId,
                     IsCollidable = IsCollidable,
                     LayerId = LayerId ? 0 : 1,
-                    Image = Image,
                     ImageSource = ImageSource
                 };
 
@@ -92,13 +90,11 @@ namespace TileMapEditor.ViewModels
             IsCollidable = false;
             LayerId = true;
             ImageId = tile.ImageId;
-            Image = tile.Image;
 
             var tileToSend = new Tile
             {
                 ImageSource = tile.ImageSource,
                 ImageId = tile.ImageId,
-                Image = tile.Image
             };
 
             SelectedTileChanged?.Invoke(this, tileToSend);

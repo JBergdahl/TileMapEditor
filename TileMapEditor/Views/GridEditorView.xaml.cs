@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using TileMapEditor.Models;
 
 namespace TileMapEditor.Views
 {
@@ -22,21 +24,34 @@ namespace TileMapEditor.Views
         public ImageSource SelectedImageTop { get; set; }
         private bool CanEditTileGrid { get; set; }
 
-        public event EventHandler<int[,]> TileElementPressed;
+        public event EventHandler<Point> TileElementPressed;
 
         private void TileElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
         {
-            if (!CanEditTileGrid) return;
+            if (!CanEditTileGrid)
+            {
+                return;
+            }
+
             var gridTile = (Grid)sender;
-            var gridTileImages = gridTile.Children.OfType<Image>();
-            var tileImages = gridTileImages.ToList();
-            var bottomImage = tileImages.Find(x => x.Name == "BottomImage");
-            var topImage = tileImages.Find(x => x.Name == "TopImage");
+            var mapTile = (MapTile)gridTile.DataContext;
 
-            if (bottomImage != null && SelectedImageBottom != null) bottomImage.Source = SelectedImageBottom;
-            if (topImage != null && SelectedImageTop != null) topImage.Source = SelectedImageTop;
+            TileElementPressed?.Invoke(this, mapTile.TilePositionOnGrid);
+        }
 
-            TileElementPressed?.Invoke(this, (int[,])gridTile.Tag);
+        public event EventHandler<Point> TileElementRightPressed;
+
+        private void TileElement_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!CanEditTileGrid)
+            {
+                return;
+            }
+
+            var gridTile = (Grid)sender;
+            var mapTile = (MapTile)gridTile.DataContext;
+
+            TileElementRightPressed?.Invoke(this, mapTile.TilePositionOnGrid);
         }
 
         public void OnImageSourceBottomLayerChanged(object? sender, ImageSource imageSource)
@@ -54,26 +69,6 @@ namespace TileMapEditor.Views
         public void OnIsShowingCollisionPressed(object? sender, bool e)
         {
             CanEditTileGrid = e;
-        }
-
-        public event EventHandler<int[,]> TileElementRightPressed;
-
-        private void TileElement_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!CanEditTileGrid) return;
-            var gridTile = (Grid)sender;
-            var gridTileImages = gridTile.Children.OfType<Image>();
-            var tileImages = gridTileImages.ToList();
-            var bottomImage = tileImages.Find(x => x.Name == "BottomImage");
-            var topImage = tileImages.Find(x => x.Name == "TopImage");
-
-            if (topImage is { Source: { } })
-                topImage.Source = null;
-            else if (bottomImage is { Source: { } })
-                bottomImage.Source =
-                    new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"));
-
-            TileElementRightPressed?.Invoke(this, (int[,])gridTile.Tag);
         }
     }
 }

@@ -3,7 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:TileMapEditor.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:TileMapEditor.Models"
     xmlns:viewModels="clr-namespace:TileMapEditor.ViewModels"
@@ -13,12 +12,11 @@
     mc:Ignorable="d">
     <Grid>
         <ItemsControl
-            x:Name="GridtilesFromGridEditorVM"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            ItemsSource="{Binding GridTiles}">
-            <ItemsControl.Resources>
-                <DataTemplate DataType="{x:Type models:GridEditorModel}">
+            ItemsSource="{Binding MapTiles}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:MapTile}">
                     <Border
                         BorderBrush="White"
                         BorderThickness="0.5">
@@ -26,8 +24,7 @@
                             Width="32"
                             Height="32"
                             PreviewMouseLeftButtonDown="TileElement_OnPreviewMouseDown"
-                            PreviewMouseRightButtonDown="TileElement_OnPreviewMouseRightButtonDown"
-                            Tag="{Binding TileId}">
+                            PreviewMouseRightButtonDown="TileElement_OnPreviewMouseRightButtonDown">
                             <Image
                                 x:Name="BottomImage"
                                 Source="{Binding ImageSourceBottomLayer}" />
@@ -37,7 +34,7 @@
                         </Grid>
                     </Border>
                 </DataTemplate>
-            </ItemsControl.Resources>
+            </ItemsControl.ItemTemplate>
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid

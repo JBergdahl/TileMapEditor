@@ -7,7 +7,7 @@ using TileMapEditor.Models;
 
 namespace TileMapEditor.ViewModels
 {
-    public class TileEditorViewModel : ObservableObject
+    public class TilePickerViewModel : ObservableObject
     {
         private int _columns;
         private string _imagePath;
@@ -15,7 +15,7 @@ namespace TileMapEditor.ViewModels
         private int _tileHeight;
         private int _tileWidth;
 
-        public TileEditorViewModel(int rows, int cols, int tileWidth, int tileHeight, string tileMap)
+        public TilePickerViewModel(int rows, int cols, int tileWidth, int tileHeight, string tileMap)
         {
             InitTileSet(rows, cols, tileWidth, tileHeight, tileMap);
         }
@@ -71,9 +71,7 @@ namespace TileMapEditor.ViewModels
                 {
                     Tiles.Add(new Tile
                     {
-                        TileId = new int[r, c],
                         ImageId = imageIdCounter,
-                        ImagePath = imagePath,
                         CroppedTileSetImage = new CroppedBitmap(tileSetBitmapImage,
                             new Int32Rect(xPositionCropped * width, yPositionCropped * height, width, height))
                     });
@@ -86,7 +84,10 @@ namespace TileMapEditor.ViewModels
                     }
                 }
 
-                if (yPositionCropped > tileSetBitmapImage.Height / height - 1) break;
+                if (yPositionCropped > tileSetBitmapImage.Height / height - 1)
+                {
+                    break;
+                }
             }
         }
     }

@@ -1,18 +1,15 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
 
 namespace TileMapEditor.Models
 {
-    public class GridEditorModel
+    public class MapTile
     {
-        public int[,] TileId { get; set; }
+        public Point TilePositionOnGrid { get; set; }
         public int ImageIdBottom { get; set; }
         public int ImageIdTop { get; set; }
         public ImageSource ImageSourceBottomLayer { get; set; }
         public ImageSource ImageSourceTopLayer { get; set; }
         public bool IsCollidable { get; set; }
-        public int LayerId { get; set; }
     }
 }

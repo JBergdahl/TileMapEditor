@@ -11,37 +11,34 @@ namespace TileMapEditor
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly MainWindowViewModel mainWindow;
+        private readonly MainWindowViewModel _mainWindow;
 
         public MainWindow()
         {
             InitializeComponent();
-            mainWindow = new MainWindowViewModel();
-            DataContext = mainWindow;
-            mainWindow.UnsubscribeToOldViewModels += OnUnsubscribeToOldViewModels;
-            mainWindow.SubscribeToNewViewModels += OnSubscribeToNewViewModels;
+            _mainWindow = new MainWindowViewModel();
+            DataContext = _mainWindow;
+            _mainWindow.UnsubscribeToOldViewModels += OnUnsubscribeToOldViewModels;
+            _mainWindow.SubscribeToNewViewModels += OnSubscribeToNewViewModels;
 
-            if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
+            if (GridEditorView is not null && _mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
                 GridEditorView.TileElementRightPressed += gridEditorViewModel.OnTileElementRightPressed;
                 gridEditorViewModel.ImageSourceBottomLayerChanged += GridEditorView.OnImageSourceBottomLayerChanged;
                 gridEditorViewModel.ImageSourceTopLayerChanged += GridEditorView.OnImageSourceTopLayerChanged;
-
-                mainWindow.IsShowingCollisionPressed += GridEditorView.OnIsShowingCollisionPressed;
+                _mainWindow.IsShowingCollisionPressed += GridEditorView.OnIsShowingCollisionPressed;
             }
 
-            if (TileEditorView is not null && mainWindow.TileViewModel is { } tileViewModel)
+            if (TileEditorView is not null && _mainWindow.TileViewModel is { } tileViewModel)
             {
                 TileEditorView.SelectedCroppedImageChanged += tileViewModel.OnSelectedCroppedImageChanged;
-
-                tileViewModel.FillEmptyGridSpaceWithSelectedTile += OnFillEmptyGridSpaceWithSelectedTile;
             }
         }
 
         private void OnSubscribeToNewViewModels(object? sender, int e)
         {
-            if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
+            if (GridEditorView is not null && _mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed += gridEditorViewModel.OnTileElementPressed;
                 GridEditorView.TileElementRightPressed += gridEditorViewModel.OnTileElementRightPressed;
@@ -49,16 +46,15 @@ namespace TileMapEditor
                 gridEditorViewModel.ImageSourceTopLayerChanged += GridEditorView.OnImageSourceTopLayerChanged;
             }
 
-            if (TileEditorView is not null && mainWindow.TileViewModel is { } tileViewModel)
+            if (TileEditorView is not null && _mainWindow.TileViewModel is { } tileViewModel)
             {
                 TileEditorView.SelectedCroppedImageChanged += tileViewModel.OnSelectedCroppedImageChanged;
-                tileViewModel.FillEmptyGridSpaceWithSelectedTile += OnFillEmptyGridSpaceWithSelectedTile;
             }
         }
 
         private void OnUnsubscribeToOldViewModels(object? sender, int e)
         {
-            if (GridEditorView is not null && mainWindow.GridEditorViewModel is { } gridEditorViewModel)
+            if (GridEditorView is not null && _mainWindow.GridEditorViewModel is { } gridEditorViewModel)
             {
                 GridEditorView.TileElementPressed -= gridEditorViewModel.OnTileElementPressed;
                 GridEditorView.TileElementRightPressed -= gridEditorViewModel.OnTileElementRightPressed;
@@ -66,24 +62,18 @@ namespace TileMapEditor
                 gridEditorViewModel.ImageSourceTopLayerChanged -= GridEditorView.OnImageSourceTopLayerChanged;
             }
 
-            if (TileEditorView is not null && mainWindow.TileViewModel is { } tileViewModel)
+            if (TileEditorView is not null && _mainWindow.TileViewModel is { } tileViewModel)
             {
                 TileEditorView.SelectedCroppedImageChanged -= tileViewModel.OnSelectedCroppedImageChanged;
-                tileViewModel.FillEmptyGridSpaceWithSelectedTile -= OnFillEmptyGridSpaceWithSelectedTile;
             }
-        }
-
-        private void OnFillEmptyGridSpaceWithSelectedTile(object? sender, Tile e)
-        {
-            // Needed for real time update of grid
-            var oldVM = mainWindow.GridEditorViewModel;
-            mainWindow.GridEditorViewModel = new GridEditorViewModel(oldVM.Rows, oldVM.Columns);
-            mainWindow.GridEditorViewModel = oldVM;
         }
 
         private void Tileset_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (!Regex.IsMatch(e.Text, "^[0-9]+$")) e.Handled = true;
+            if (!Regex.IsMatch(e.Text, "^[0-9]+$"))
+            {
+                e.Handled = true;
+            }
         }
     }
 }

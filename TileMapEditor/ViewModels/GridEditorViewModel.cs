@@ -1,16 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
+using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Microsoft.Toolkit.Mvvm.Input;
 using TileMapEditor.Models;
 
 namespace TileMapEditor.ViewModels
 {
     public class GridEditorViewModel : ObservableRecipient
     {
+        private const int Empty = -1;
+        private const int TopLeftCoast = 0;
+        private const int TopCoast = 1;
+        private const int TopRightCoast = 2;
+        private const int LeftCoast = 14;
+        private const int PlainGrass = 15;
+        private const int RightCoast = 16;
+        private const int BottomLeftCoast = 28;
+        private const int BottomCoast = 29;
+        private const int BottomRightCoast = 30;
+        private const int Water = 31;
+        private const int BottomRightCornerCoast = 3;
+        private const int BottomLeftCornerCoast = 4;
+        private const int TopRightCornerCoast = 17;
+        private const int TopLeftCornerCoast = 18;
+
         private int _columns;
         private int _imageId;
         private ImageSource _imageSourceBottomLayer;
@@ -18,24 +38,13 @@ namespace TileMapEditor.ViewModels
         private bool _isCollidable;
         private int _layerId;
         private int _rows;
-        private int[,] _tileId;
 
         public GridEditorViewModel(int rows, int cols)
         {
             InitTiles(rows, cols);
         }
 
-        public event EventHandler<ImageSource> ImageSourceBottomLayerChanged;
-        public event EventHandler<ImageSource> ImageSourceTopLayerChanged;
-        public event EventHandler<List<GridEditorModel>> UpdateNeighbourTiles;
-
-        public List<GridEditorModel> GridTiles { get; set; } = new();
-
-        public int[,] TileId
-        {
-            get => _tileId;
-            set => SetProperty(ref _tileId, value);
-        }
+        public ObservableCollection<MapTile> MapTiles { get; set; } = new();
 
         public int Rows
         {
@@ -60,7 +69,10 @@ namespace TileMapEditor.ViewModels
             get => _imageSourceBottomLayer;
             set
             {
-                if (SetProperty(ref _imageSourceBottomLayer, value)) ImageSourceBottomLayerChanged?.Invoke(this, value);
+                if (SetProperty(ref _imageSourceBottomLayer, value))
+                {
+                    ImageSourceBottomLayerChanged?.Invoke(this, value);
+                }
             }
         }
 
@@ -69,7 +81,10 @@ namespace TileMapEditor.ViewModels
             get => _imageSourceTopLayer;
             set
             {
-                if (SetProperty(ref _imageSourceTopLayer, value)) ImageSourceTopLayerChanged?.Invoke(this, value);
+                if (SetProperty(ref _imageSourceTopLayer, value))
+                {
+                    ImageSourceTopLayerChanged?.Invoke(this, value);
+                }
             }
         }
 
@@ -85,35 +100,45 @@ namespace TileMapEditor.ViewModels
             set => SetProperty(ref _layerId, value);
         }
 
+        public event EventHandler<ImageSource> ImageSourceBottomLayerChanged;
+        public event EventHandler<ImageSource> ImageSourceTopLayerChanged;
+        public event EventHandler<List<MapTile>> UpdateNeighbourTiles;
+
         public void InitTiles(int rows, int columns)
         {
             Rows = rows;
             Columns = columns;
             for (var r = 0; r < rows; r++)
             for (var c = 0; c < columns; c++)
-                GridTiles.Add(new GridEditorModel
+            {
+                MapTiles.Add(new MapTile
                 {
-                    TileId = new int[r, c],
+                    TilePositionOnGrid = new Point(r, c),
                     ImageIdTop = -1,
                     ImageIdBottom = -1,
-                    LayerId = -1,
                     IsCollidable = false,
                     ImageSourceBottomLayer =
-                        new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"))
+                        new BitmapImage(new Uri(AssetStructure.EmptyPngPath))
                 });
+            }
         }
 
-        public void OnTileElementPressed(object? sender, int[,] tileId)
+        public void OnTileElementPressed(object? sender, Point tilePositionOnGrid)
         {
-            Debug.WriteLine("Row: " + tileId.GetLength(0) + ", Col: " + tileId.GetLength(1));
+            Debug.WriteLine("Position: " + tilePositionOnGrid);
 
-            var tileOnGrid = GridTiles.Find(
-                x => x.TileId.GetLength(0) == tileId.GetLength(0) && x.TileId.GetLength(1) == tileId.GetLength(1));
+            var tileOnGrid = MapTiles.FirstOrDefault(
+                x => x.TilePositionOnGrid.X.Equals(tilePositionOnGrid.X) &&
+                     x.TilePositionOnGrid.Y.Equals(tilePositionOnGrid.Y));
 
-            if (tileOnGrid is null) return;
+            if (tileOnGrid is not { ImageIdBottom: not 15 })
+            {
+                return;
+            }
+
+            CollectionViewSource.GetDefaultView(MapTiles).Refresh();
 
             tileOnGrid.IsCollidable = IsCollidable;
-            tileOnGrid.LayerId = LayerId;
 
             if (LayerId == 0)
             {
@@ -126,165 +151,80 @@ namespace TileMapEditor.ViewModels
                 tileOnGrid.ImageIdTop = ImageId;
             }
 
-            // Tile is plain grass
-            if (tileOnGrid.ImageIdBottom == 15 && LayerId == 0) UpdateTileNeighbours(tileOnGrid);
+            // Tile is plain grass + using standard Tile set
+            if (tileOnGrid.ImageIdBottom == 15 && LayerId == 0)
+            {
+                UpdateTileNeighbours(tileOnGrid);
+            }
         }
 
-        private void UpdateTileNeighbours(GridEditorModel tileOnGrid)
+        private void UpdateTileNeighbours(MapTile tileOnGrid)
         {
-            var listOfNeighbourTiles = new List<GridEditorModel>();
+            var listOfNeighbourTiles = new List<MapTile>();
 
-            var tileOnGridAbovePressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1));
-            var tileOnGridBelowPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1));
+            var tileOnGridAbovePressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
 
-            var tileOnGridAboveLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1);
-            var tileOnGridAboveRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1);
+            var tileOnGridBelowPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
 
-            var tileOnGridBelowLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1);
-            var tileOnGridBelowRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1);
+            var tileOnGridAboveLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
 
-            var tileOnGridRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1 &&
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0));
-            var tileOnGridLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1 &&
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0));
+            var tileOnGridAboveRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
 
+            var tileOnGridBelowLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
 
-            if (tileOnGridAbovePressedTile is
-                { ImageIdBottom: not 3 and not 4 and not 14 and not 15 and not 16 and not 29 })
-                tileOnGridAbovePressedTile.ImageIdBottom = 1;
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 3 })
-            {
-                tileOnGridAbovePressedTile.ImageIdBottom = 15;
-                if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: -1 or 28 or 30 })
-                    tileOnGridAboveRightOfPressedTile.ImageIdBottom = 16;
-                if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: 29 })
-                    tileOnGridAboveRightOfPressedTile.ImageIdBottom = 3;
-            }
+            var tileOnGridBelowRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
 
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 4 })
-            {
-                tileOnGridAbovePressedTile.ImageIdBottom = 15;
-                if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: -1 or 28 or 30 })
-                    tileOnGridAboveLeftOfPressedTile.ImageIdBottom = 14;
-                if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: 29 })
-                    tileOnGridAboveLeftOfPressedTile.ImageIdBottom = 4;
-            }
+            var tileOnGridRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
 
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 29 }) tileOnGridAbovePressedTile.ImageIdBottom = 15;
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 14 }) tileOnGridAbovePressedTile.ImageIdBottom = 18;
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 16 }) tileOnGridAbovePressedTile.ImageIdBottom = 17;
+            var tileOnGridLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
+
+            UpdateTilesAbovePressedTile(tileOnGridAbovePressedTile, tileOnGridAboveRightOfPressedTile, tileOnGridAboveLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridAbovePressedTile);
 
-
-            if (tileOnGridBelowPressedTile is
-                { ImageIdBottom: not 1 and not 18 and not 17 and not 14 and not 16 and not 15 })
-                tileOnGridBelowPressedTile.ImageIdBottom = 29;
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 18 })
-            {
-                tileOnGridBelowPressedTile.ImageIdBottom = 15;
-                if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: -1 or 0 or 2 })
-                    tileOnGridBelowLeftOfPressedTile.ImageIdBottom = 14;
-                if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: 1 })
-                    tileOnGridBelowLeftOfPressedTile.ImageIdBottom = 18;
-            }
-
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 17 })
-            {
-                tileOnGridBelowPressedTile.ImageIdBottom = 15;
-                if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: -1 or 0 or 2 })
-                    tileOnGridBelowRightOfPressedTile.ImageIdBottom = 16;
-                if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: 1 })
-                    tileOnGridBelowRightOfPressedTile.ImageIdBottom = 17;
-            }
-
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 1 }) tileOnGridBelowPressedTile.ImageIdBottom = 15;
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 14 }) tileOnGridBelowPressedTile.ImageIdBottom = 4;
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 16 }) tileOnGridBelowPressedTile.ImageIdBottom = 3;
+            UpdateTilesBelowPressedTile(tileOnGridBelowPressedTile, tileOnGridBelowRightOfPressedTile, tileOnGridBelowLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridBelowPressedTile);
 
-
-            if (tileOnGridRightOfPressedTile is
-                { ImageIdBottom: not 4 and not 18 and not 15 and not 14 and not 1 and not 29 })
-                tileOnGridRightOfPressedTile.ImageIdBottom = 16;
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 4 })
-            {
-                tileOnGridRightOfPressedTile.ImageIdBottom = 15;
-                if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: -1 or 28 or 31 })
-                    tileOnGridBelowRightOfPressedTile.ImageIdBottom = 29;
-                if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: 14 })
-                    tileOnGridBelowRightOfPressedTile.ImageIdBottom = 4;
-            }
-
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 18 })
-            {
-                tileOnGridRightOfPressedTile.ImageIdBottom = 15;
-                if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: -1 or 0 or 2 or 31 })
-                    tileOnGridAboveRightOfPressedTile.ImageIdBottom = 1;
-                if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: 14 })
-                    tileOnGridAboveRightOfPressedTile.ImageIdBottom = 18;
-            }
-
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 14 }) tileOnGridRightOfPressedTile.ImageIdBottom = 15;
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 1 }) tileOnGridRightOfPressedTile.ImageIdBottom = 17;
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 29 }) tileOnGridRightOfPressedTile.ImageIdBottom = 3;
+            UpdateTilesRightOfPressedTile(tileOnGridRightOfPressedTile, tileOnGridAboveRightOfPressedTile, tileOnGridBelowRightOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridRightOfPressedTile);
 
-
-            if (tileOnGridLeftOfPressedTile is
-                { ImageIdBottom: not 3 and not 15 and not 16 and not 17 and not 1 and not 29 })
-                tileOnGridLeftOfPressedTile.ImageIdBottom = 14;
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 3 })
-            {
-                tileOnGridLeftOfPressedTile.ImageIdBottom = 15;
-                if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: -1 or 30 or 31 })
-                    tileOnGridBelowLeftOfPressedTile.ImageIdBottom = 29;
-                if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: 16 })
-                    tileOnGridBelowLeftOfPressedTile.ImageIdBottom = 3;
-            }
-
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 17 })
-            {
-                tileOnGridLeftOfPressedTile.ImageIdBottom = 15;
-                if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: -1 or 0 or 2 or 31 })
-                    tileOnGridAboveLeftOfPressedTile.ImageIdBottom = 1;
-                if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: 16 })
-                    tileOnGridAboveLeftOfPressedTile.ImageIdBottom = 17;
-            }
-
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 16 }) tileOnGridLeftOfPressedTile.ImageIdBottom = 15;
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 1 }) tileOnGridLeftOfPressedTile.ImageIdBottom = 18;
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 29 }) tileOnGridLeftOfPressedTile.ImageIdBottom = 4;
+            UpdateTilesLeftOfPressedTile(tileOnGridLeftOfPressedTile, tileOnGridAboveLeftOfPressedTile,
+                tileOnGridBelowLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridLeftOfPressedTile);
 
-
-            if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: -1 or 31 })
-                tileOnGridAboveLeftOfPressedTile.ImageIdBottom = 0;
+            UpdateTileAboveLeftOfPressedTile(tileOnGridAboveLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridAboveLeftOfPressedTile);
 
-            if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: -1 or 31 })
-                tileOnGridAboveRightOfPressedTile.ImageIdBottom = 2;
+            UpdateTileAboveRightOfPressedTile(tileOnGridAboveRightOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridAboveRightOfPressedTile);
 
-            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: -1 or 31 })
-                tileOnGridBelowLeftOfPressedTile.ImageIdBottom = 28;
+            UpdateTileBelowLeftOfPressedTile(tileOnGridBelowLeftOfPressedTile);
             listOfNeighbourTiles.Add(tileOnGridBelowLeftOfPressedTile);
 
-            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: -1 or 31 })
-                tileOnGridBelowRightOfPressedTile.ImageIdBottom = 30;
+            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: Empty or Water })
+            {
+                tileOnGridBelowLeftOfPressedTile.ImageIdBottom = BottomLeftCoast;
+            }
+
+            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: Empty or Water })
+            {
+                tileOnGridBelowRightOfPressedTile.ImageIdBottom = BottomRightCoast;
+            }
             listOfNeighbourTiles.Add(tileOnGridBelowRightOfPressedTile);
 
             UpdateNeighbourTiles?.Invoke(this, listOfNeighbourTiles);
@@ -314,33 +254,49 @@ namespace TileMapEditor.ViewModels
 
         public void OnFillEmptyGridSpaceWithSelectedTile(object? sender, Tile tileFromTileViewModel)
         {
-            foreach (var tile in GridTiles)
+            foreach (var tile in MapTiles)
+            {
                 if (tileFromTileViewModel.LayerId == 0)
                 {
-                    if (tile.ImageIdBottom != -1) continue;
-                    //tile.LayerId = tileFromTileViewModel.LayerId; ------------->useless?
+                    if (tile.ImageIdBottom != -1)
+                    {
+                        continue;
+                    }
+
                     tile.IsCollidable = tileFromTileViewModel.IsCollidable;
                     tile.ImageIdBottom = tileFromTileViewModel.ImageId;
                     tile.ImageSourceBottomLayer = tileFromTileViewModel.ImageSource;
                 }
                 else
                 {
-                    if (tile.ImageIdTop != -1) continue;
-                    //tile.LayerId = tileFromTileViewModel.LayerId;  ------------->useless?
+                    if (tile.ImageIdTop != -1)
+                    {
+                        continue;
+                    }
+
                     tile.IsCollidable = tileFromTileViewModel.IsCollidable;
                     tile.ImageIdTop = tileFromTileViewModel.ImageId;
                     tile.ImageSourceTopLayer = tileFromTileViewModel.ImageSource;
                 }
+            }
+
+            CollectionViewSource.GetDefaultView(MapTiles).Refresh();
         }
 
-        public void OnTileElementRightPressed(object? sender, int[,] tileId)
+        public void OnTileElementRightPressed(object? sender, Point tilePositionOnGrid)
         {
-            var tileOnGrid = GridTiles.Find(
-                x => x.TileId.GetLength(0) == tileId.GetLength(0) && x.TileId.GetLength(1) == tileId.GetLength(1));
+            var tileOnGrid = MapTiles.FirstOrDefault(
+                x => x.TilePositionOnGrid.X.Equals(tilePositionOnGrid.X) &&
+                     x.TilePositionOnGrid.Y.Equals(tilePositionOnGrid.Y));
 
-            if (tileOnGrid is null) return;
+            CollectionViewSource.GetDefaultView(MapTiles).Refresh();
 
-            var originalIdBorrom = tileOnGrid.ImageIdBottom;
+            if (tileOnGrid is null)
+            {
+                return;
+            }
+
+            var originalIdBottom = tileOnGrid.ImageIdBottom;
             var originalIdTop = tileOnGrid.ImageIdTop;
 
             if (tileOnGrid.ImageSourceTopLayer != null)
@@ -350,82 +306,390 @@ namespace TileMapEditor.ViewModels
             }
             else if (tileOnGrid.ImageSourceBottomLayer != null)
             {
-                tileOnGrid.ImageSourceBottomLayer =
-                    new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"));
+                tileOnGrid.ImageSourceBottomLayer = new BitmapImage(new Uri(AssetStructure.EmptyPngPath));
                 tileOnGrid.ImageIdBottom = -1;
             }
 
             tileOnGrid.IsCollidable = false;
 
             // Tile is plain grass
-            if (originalIdBorrom == 15 && originalIdTop == -1) UpdateRemoveTileNeighbours(tileOnGrid);
+            if (originalIdBottom == 15 && originalIdTop == -1)
+            {
+                UpdateRemoveTileNeighbours(tileOnGrid);
+            }
         }
 
-        private void UpdateRemoveTileNeighbours(GridEditorModel tileOnGrid)
+        private void UpdateRemoveTileNeighbours(MapTile tileOnGrid)
         {
-            var listOfNeighbourTiles = new List<GridEditorModel>();
+            var listOfNeighbourTiles = new List<MapTile>();
 
-            var tileOnGridAbovePressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1));
-            var tileOnGridBelowPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1));
+            var tileOnGridAbovePressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
 
-            var tileOnGridAboveLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1);
-            var tileOnGridAboveRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) - 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1);
+            var tileOnGridBelowPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
 
-            var tileOnGridBelowLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1);
-            var tileOnGridBelowRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0) + 1 &&
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1);
+            var tileOnGridAboveLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
 
-            var tileOnGridRightOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) + 1 &&
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0));
-            var tileOnGridLeftOfPressedTile = GridTiles.Find(x =>
-                x.TileId.GetLength(1) == tileOnGrid.TileId.GetLength(1) - 1 &&
-                x.TileId.GetLength(0) == tileOnGrid.TileId.GetLength(0));
+            var tileOnGridAboveRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
 
-            if (tileOnGridAbovePressedTile is { ImageIdBottom: 1 }) tileOnGridAbovePressedTile.ImageIdBottom = -1;
+            var tileOnGridBelowLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
+
+            var tileOnGridBelowRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
+
+            var tileOnGridRightOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
+
+            var tileOnGridLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
+                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
+                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
+
+            if (tileOnGridAbovePressedTile is { ImageIdBottom: TopCoast })
+            {
+                tileOnGridAbovePressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridAbovePressedTile);
 
-            if (tileOnGridBelowPressedTile is { ImageIdBottom: 29 }) tileOnGridBelowPressedTile.ImageIdBottom = -1;
+            if (tileOnGridBelowPressedTile is { ImageIdBottom: BottomCoast })
+            {
+                tileOnGridBelowPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridBelowPressedTile);
 
-            if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: 0 })
-                tileOnGridAboveLeftOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridAboveLeftOfPressedTile is { ImageIdBottom: TopLeftCoast })
+            {
+                tileOnGridAboveLeftOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridAboveLeftOfPressedTile);
 
-            if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: 2 })
-                tileOnGridAboveRightOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridAboveRightOfPressedTile is { ImageIdBottom: TopRightCoast })
+            {
+                tileOnGridAboveRightOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridAboveRightOfPressedTile);
 
-            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: 28 })
-                tileOnGridBelowLeftOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridBelowLeftOfPressedTile is { ImageIdBottom: BottomLeftCoast })
+            {
+                tileOnGridBelowLeftOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridBelowLeftOfPressedTile);
 
-            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: 30 })
-                tileOnGridBelowRightOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridBelowRightOfPressedTile is { ImageIdBottom: BottomRightCoast })
+            {
+                tileOnGridBelowRightOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridBelowRightOfPressedTile);
 
-            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 16 }) tileOnGridRightOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridRightOfPressedTile is { ImageIdBottom: 16 })
+            {
+                tileOnGridRightOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridRightOfPressedTile);
 
-            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: 14 }) tileOnGridLeftOfPressedTile.ImageIdBottom = -1;
+            if (tileOnGridLeftOfPressedTile is { ImageIdBottom: LeftCoast })
+            {
+                tileOnGridLeftOfPressedTile.ImageIdBottom = Empty;
+            }
+
             listOfNeighbourTiles.Add(tileOnGridLeftOfPressedTile);
 
-            foreach (var tile in listOfNeighbourTiles)
+            foreach (var tile in listOfNeighbourTiles.Where(tile => tile is { }))
+            {
                 tile.ImageSourceBottomLayer =
-                    new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/Empty.png"));
+                    new BitmapImage(new Uri(AssetStructure.EmptyPngPath));
+            }
 
             UpdateNeighbourTiles?.Invoke(this, listOfNeighbourTiles);
         }
+
+        private static void UpdateTilesAbovePressedTile(MapTile above, MapTile aboveRight, MapTile aboveLeft)
+        {
+            switch (above)
+            {
+                case
+                {
+                    ImageIdBottom: not BottomRightCornerCoast and not BottomLeftCornerCoast and not LeftCoast and not
+                    PlainGrass and not RightCoast and not BottomCoast
+                }:
+                    above.ImageIdBottom = TopCoast;
+                    break;
+
+                case { ImageIdBottom: BottomRightCornerCoast }:
+                    above.ImageIdBottom = PlainGrass;
+                    if (aboveRight is { ImageIdBottom: Empty or BottomLeftCoast or BottomRightCoast })
+                    {
+                        aboveRight.ImageIdBottom = RightCoast;
+                    }
+                    else if (aboveRight is { ImageIdBottom: BottomCoast })
+                    {
+                        aboveRight.ImageIdBottom = BottomRightCornerCoast;
+                    }
+                    else
+                    {
+                        aboveRight.ImageIdBottom = aboveRight.ImageIdBottom;
+                    }
+
+                    break;
+
+                case { ImageIdBottom: BottomLeftCornerCoast }:
+                {
+                    above.ImageIdBottom = PlainGrass;
+                    if (aboveLeft is { ImageIdBottom: Empty or BottomLeftCoast or BottomRightCoast })
+                    {
+                        aboveLeft.ImageIdBottom = LeftCoast;
+                    }
+                    else if (aboveLeft is { ImageIdBottom: BottomCoast })
+                    {
+                        aboveLeft.ImageIdBottom = BottomLeftCornerCoast;
+                    }
+                    break;
+                }
+
+                case { ImageIdBottom: BottomCoast }:
+                    above.ImageIdBottom = PlainGrass;
+                    break;
+
+                case { ImageIdBottom: LeftCoast }:
+                    above.ImageIdBottom = TopLeftCornerCoast;
+                    break;
+
+                case { ImageIdBottom: RightCoast }:
+                    above.ImageIdBottom = TopRightCornerCoast;
+                    break;
+            }
+        }
+
+        private static void UpdateTilesBelowPressedTile(MapTile below, MapTile belowRight, MapTile belowLeft)
+        {
+            switch (below)
+            {
+                case
+                {
+                    ImageIdBottom: not TopCoast and not TopLeftCornerCoast and not TopRightCornerCoast and not LeftCoast and
+                    not RightCoast and not PlainGrass
+                }:
+                    below.ImageIdBottom = BottomCoast;
+                    break;
+                case { ImageIdBottom: TopLeftCornerCoast }:
+                {
+                    below.ImageIdBottom = PlainGrass;
+                    if (belowLeft is { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast })
+                    {
+                        belowLeft.ImageIdBottom = LeftCoast;
+                    }
+
+                    if (belowLeft is { ImageIdBottom: TopCoast })
+                    {
+                        belowLeft.ImageIdBottom = TopLeftCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: TopRightCornerCoast }:
+                {
+                    below.ImageIdBottom = PlainGrass;
+                    if (belowRight is { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast })
+                    {
+                        belowRight.ImageIdBottom = RightCoast;
+                    }
+
+                    if (belowRight is { ImageIdBottom: TopCoast })
+                    {
+                        belowRight.ImageIdBottom = TopRightCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: TopCoast }:
+                    below.ImageIdBottom = PlainGrass;
+                    break;
+                case { ImageIdBottom: LeftCoast }:
+                    below.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: RightCoast }:
+                    below.ImageIdBottom = BottomRightCornerCoast;
+                    break;
+            }
+        }
+
+        private static void UpdateTilesRightOfPressedTile(MapTile right, MapTile rightAbove, MapTile rightBelow)
+        {
+            switch (right)
+            {
+                case
+                {
+                    ImageIdBottom: not BottomLeftCornerCoast and not TopLeftCornerCoast and not PlainGrass and not LeftCoast
+                    and not TopCoast and not BottomCoast
+                }:
+                    right.ImageIdBottom = RightCoast;
+                    break;
+                case { ImageIdBottom: BottomLeftCornerCoast }:
+                {
+                    right.ImageIdBottom = PlainGrass;
+                    if (rightBelow is { ImageIdBottom: Empty or BottomLeftCoast or Water })
+                    {
+                        rightBelow.ImageIdBottom = BottomCoast;
+                    }
+
+                    if (rightBelow is { ImageIdBottom: LeftCoast })
+                    {
+                        rightBelow.ImageIdBottom = BottomLeftCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: TopLeftCornerCoast }:
+                {
+                    right.ImageIdBottom = PlainGrass;
+                    if (rightAbove is
+                        { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast or Water })
+                    {
+                        rightAbove.ImageIdBottom = TopCoast;
+                    }
+
+                    if (rightAbove is { ImageIdBottom: LeftCoast })
+                    {
+                        rightAbove.ImageIdBottom = TopLeftCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: LeftCoast }:
+                    right.ImageIdBottom = PlainGrass;
+                    break;
+                case { ImageIdBottom: TopCoast }:
+                    right.ImageIdBottom = TopRightCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomCoast }:
+                    right.ImageIdBottom = BottomRightCornerCoast;
+                    break;
+            }
+        }
+
+        private static void UpdateTilesLeftOfPressedTile(MapTile left, MapTile leftAbove, MapTile leftBelow)
+        {
+            switch (left)
+            {
+                case
+                {
+                    ImageIdBottom: not BottomRightCornerCoast and not PlainGrass and not RightCoast and not
+                    TopRightCornerCoast and not TopCoast and not BottomCoast
+                }:
+                    left.ImageIdBottom = LeftCoast;
+                    break;
+                case { ImageIdBottom: BottomRightCornerCoast }:
+                {
+                    left.ImageIdBottom = PlainGrass;
+                    if (leftBelow is { ImageIdBottom: Empty or BottomRightCoast or Water })
+                    {
+                        leftBelow.ImageIdBottom = BottomCoast;
+                    }
+
+                    if (leftBelow is { ImageIdBottom: RightCoast })
+                    {
+                        leftBelow.ImageIdBottom = BottomRightCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: TopRightCornerCoast }:
+                {
+                    left.ImageIdBottom = PlainGrass;
+                    if (leftAbove is
+                        { ImageIdBottom: Empty or TopLeftCoast or TopRightCoast or Water })
+                    {
+                        leftAbove.ImageIdBottom = TopCoast;
+                    }
+
+                    if (leftAbove is { ImageIdBottom: RightCoast })
+                    {
+                        leftAbove.ImageIdBottom = TopRightCornerCoast;
+                    }
+
+                    break;
+                }
+                case { ImageIdBottom: RightCoast }:
+                    left.ImageIdBottom = PlainGrass;
+                    break;
+                case { ImageIdBottom: TopCoast }:
+                    left.ImageIdBottom = TopLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomCoast }:
+                    left.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+            }
+        }
+
+        private static void UpdateTileAboveLeftOfPressedTile(MapTile aboveLeft)
+        {
+            switch (aboveLeft)
+            {
+                case { ImageIdBottom: Empty or Water }:
+                    aboveLeft.ImageIdBottom = TopLeftCoast;
+                    break;
+                case {ImageIdBottom: BottomCoast}:
+                    aboveLeft.ImageIdBottom = BottomLeftCornerCoast;
+                    break;
+                case { ImageIdBottom: BottomLeftCoast }:
+                    aboveLeft.ImageIdBottom = LeftCoast;
+                    break;
+            }
+        }
+
+        private static void UpdateTileAboveRightOfPressedTile(MapTile aboveRight)
+        {
+            if (aboveRight is { ImageIdBottom: Empty or Water })
+            {
+                aboveRight.ImageIdBottom = TopRightCoast;
+            }
+            else if (aboveRight is { ImageIdBottom: BottomCoast })
+            {
+                aboveRight.ImageIdBottom = BottomRightCornerCoast;
+            }else if (aboveRight is { ImageIdBottom: BottomRightCoast })
+            {
+                aboveRight.ImageIdBottom = RightCoast;
+            }
+        }
+
+        private static void UpdateTileBelowLeftOfPressedTile(MapTile belowLeft)
+        {
+
+        }
     }
+}
+
+internal enum TileIndex
+{
+    TopLeftCoast = 0,
+    TopCoast = 1,
+    TopRightCoast = 2,
+    LeftCoast = 14,
+    PlainGrass = 15,
+    RightCoast = 16,
+    BottomRightCoast = 30,
+    BottomCoast = 29,
+    BottomLeftCoast = 28,
+
+    BottomRightCornerCoast = 3,
+    BottomLeftCornerCoast = 4,
+    TopRightCornerCoast = 17,
+    TopLeftCornerCoast = 18
 }

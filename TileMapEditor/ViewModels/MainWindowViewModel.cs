@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
@@ -15,15 +16,15 @@ namespace TileMapEditor.ViewModels
 {
     public class MainWindowViewModel : ObservableObject
     {
+        private readonly List<ImageSource> _tempImages = new();
         private SolidColorBrush _collisionButtonBackground;
         private int _gridColumns;
         private GridEditorViewModel _gridEditorViewModel;
         private int _gridRows;
         private bool _isShowingCollision;
         private string _standardTilesetPath;
-        private readonly List<ImageSource> _tempImages = new();
-        private TileEditorViewModel _tileEditorViewModel;
         private int _tileHeight;
+        private TilePickerViewModel _tilePickerViewModel;
         private TileViewModel _tileViewModel;
         private int _tileWidth;
 
@@ -31,7 +32,7 @@ namespace TileMapEditor.ViewModels
         {
             CreateStandardTileset();
             GridEditorViewModel = new GridEditorViewModel(15, 20);
-            TileEditorViewModel = new TileEditorViewModel(10, 14, 16, 16, StandardTilesetPath);
+            TilePickerViewModel = new TilePickerViewModel(10, 14, 16, 16, StandardTilesetPath);
             TileViewModel = new TileViewModel();
             ExportGridCommand = new RelayCommand(OnExportGridCommand);
             GridCollisionCommand = new RelayCommand(OnGridCollisionCommand);
@@ -41,10 +42,6 @@ namespace TileMapEditor.ViewModels
             IsShowingCollisionPressed += TileViewModel.OnIsShowingCollisionPressed;
             CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
         }
-
-        public event EventHandler<int> UnsubscribeToOldViewModels;
-        public event EventHandler<int> SubscribeToNewViewModels;
-        public event EventHandler<bool> IsShowingCollisionPressed;
 
         public RelayCommand ExportGridCommand { get; set; }
         public RelayCommand GridCollisionCommand { get; set; }
@@ -100,16 +97,23 @@ namespace TileMapEditor.ViewModels
             set
             {
                 if (_gridEditorViewModel is not null)
+                {
                     GridEditorViewModel.UpdateNeighbourTiles -= OnUpdateNeighbourTiles;
-                if (!SetProperty(ref _gridEditorViewModel, value)) return;
+                }
+
+                if (!SetProperty(ref _gridEditorViewModel, value))
+                {
+                    return;
+                }
+
                 GridEditorViewModel.UpdateNeighbourTiles += OnUpdateNeighbourTiles;
             }
         }
 
-        public TileEditorViewModel TileEditorViewModel
+        public TilePickerViewModel TilePickerViewModel
         {
-            get => _tileEditorViewModel;
-            set => SetProperty(ref _tileEditorViewModel, value);
+            get => _tilePickerViewModel;
+            set => SetProperty(ref _tilePickerViewModel, value);
         }
 
         public TileViewModel TileViewModel
@@ -124,8 +128,15 @@ namespace TileMapEditor.ViewModels
                     _tileViewModel.SelectedTileLayerChanged -= GridEditorViewModel.OnSelectedTileLayerChanged;
                 }
 
-                if (!SetProperty(ref _tileViewModel, value)) return;
-                if (_tileViewModel is null) return;
+                if (!SetProperty(ref _tileViewModel, value))
+                {
+                    return;
+                }
+
+                if (_tileViewModel is null)
+                {
+                    return;
+                }
 
                 _tileViewModel.SelectedTileChanged += GridEditorViewModel.OnSelectedTileChanged;
 
@@ -138,6 +149,10 @@ namespace TileMapEditor.ViewModels
             }
         }
 
+        public event EventHandler<int> UnsubscribeToOldViewModels;
+        public event EventHandler<int> SubscribeToNewViewModels;
+        public event EventHandler<bool> IsShowingCollisionPressed;
+
         private void CreateStandardTileset()
         {
             var localAppFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -145,6 +160,7 @@ namespace TileMapEditor.ViewModels
             Directory.CreateDirectory(localAppFolder + "\\TileMapEditor\\Tilesets");
             var path = localAppFolder + "\\TileMapEditor\\Tilesets\\tilemap.png";
             if (File.Exists(path))
+            {
                 try
                 {
                     File.Delete(path);
@@ -154,22 +170,33 @@ namespace TileMapEditor.ViewModels
                     MessageBox.Show("File is in use! Use another image or try again");
                     return;
                 }
+            }
 
-            File.Copy(AppDomain.CurrentDomain.BaseDirectory + "../../../Images/tilemap.png", path);
+            File.Copy(AssetStructure.TilesetPath, path);
             StandardTilesetPath = path;
         }
 
         private void OnNewTilesetCommand()
         {
-            if (TileHeight is 0 || TileWidth is 0) return;
+            if (TileHeight is 0 || TileWidth is 0)
+            {
+                return;
+            }
+
             var result = MessageBox.Show("Do you want to save current map?",
                 $"tilemap_{GridEditorViewModel.Rows}x{GridEditorViewModel.Columns}_",
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Cancel) return;
+            if (result == MessageBoxResult.Cancel)
+            {
+                return;
+            }
 
-            if (result == MessageBoxResult.Yes) OnExportGridCommand();
+            if (result == MessageBoxResult.Yes)
+            {
+                OnExportGridCommand();
+            }
 
             var op = new OpenFileDialog
             {
@@ -181,12 +208,17 @@ namespace TileMapEditor.ViewModels
 
             var localAppFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-            if (op.ShowDialog() != true) return;
+            if (op.ShowDialog() != true)
+            {
+                return;
+            }
+
             Directory.CreateDirectory(localAppFolder + "\\TileMapEditor");
             Directory.CreateDirectory(localAppFolder + "\\TileMapEditor\\Tilesets");
             var source = op.FileName;
             var path = localAppFolder + "\\TileMapEditor\\Tilesets\\" + op.SafeFileName;
             if (File.Exists(path))
+            {
                 try
                 {
                     File.Delete(path);
@@ -196,12 +228,13 @@ namespace TileMapEditor.ViewModels
                     MessageBox.Show("File is in use! Use another image or try again");
                     return;
                 }
+            }
 
             File.Copy(source, path);
             var image = new BitmapImage(new Uri(path));
 
             UnsubscribeToOldViewModels?.Invoke(this, 0);
-            TileEditorViewModel = new TileEditorViewModel(
+            TilePickerViewModel = new TilePickerViewModel(
                 (int)image.Height / TileHeight,
                 (int)image.Width / TileWidth,
                 TileWidth, TileHeight, path);
@@ -212,22 +245,32 @@ namespace TileMapEditor.ViewModels
 
         private void OnNewGridCommand()
         {
-            if (GridRows is 0 || GridColumns is 0) return;
+            if (GridRows is 0 || GridColumns is 0)
+            {
+                return;
+            }
+
             var result = MessageBox.Show("Do you want to save current map?",
                 $"tilemap_{GridEditorViewModel.Rows}x{GridEditorViewModel.Columns}_",
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Question);
 
-            if (result == MessageBoxResult.Cancel) return;
+            if (result == MessageBoxResult.Cancel)
+            {
+                return;
+            }
 
-            if (result == MessageBoxResult.Yes) OnExportGridCommand();
+            if (result == MessageBoxResult.Yes)
+            {
+                OnExportGridCommand();
+            }
 
-            var image = new BitmapImage(new Uri(TileEditorViewModel.ImagePath));
+            var image = new BitmapImage(new Uri(TilePickerViewModel.ImagePath));
             UnsubscribeToOldViewModels?.Invoke(this, 0);
-            TileEditorViewModel = new TileEditorViewModel(
-                (int)image.Height / TileEditorViewModel.TileHeight,
-                (int)image.Width / TileEditorViewModel.TileWidth,
-                TileEditorViewModel.TileWidth, TileEditorViewModel.TileHeight, TileEditorViewModel.ImagePath);
+            TilePickerViewModel = new TilePickerViewModel(
+                (int)image.Height / TilePickerViewModel.TileHeight,
+                (int)image.Width / TilePickerViewModel.TileWidth,
+                TilePickerViewModel.TileWidth, TilePickerViewModel.TileHeight, TilePickerViewModel.ImagePath);
             GridEditorViewModel = new GridEditorViewModel(GridRows, GridColumns);
             TileViewModel = new TileViewModel();
             SubscribeToNewViewModels?.Invoke(this, 0);
@@ -243,36 +286,48 @@ namespace TileMapEditor.ViewModels
 
             openFileDialog.ShowDialog();
 
-            if (openFileDialog.FileName == "") return;
+            if (openFileDialog.FileName == "")
+            {
+                return;
+            }
+
             var text = File.ReadAllText(openFileDialog.FileName);
             var mainWindowModel = JsonConvert.DeserializeObject<MainWindowModel>(text);
 
-            if (mainWindowModel is not { } mWm) return;
+            if (mainWindowModel is not { } mWm)
+            {
+                return;
+            }
+
             UnsubscribeToOldViewModels?.Invoke(this, 0);
             GridEditorViewModel =
                 new GridEditorViewModel(mWm.GridHeight, mWm.GridWidth);
 
-            TileEditorViewModel = new TileEditorViewModel(mWm.TilemapHeight / mWm.TileHeight,
+            TilePickerViewModel = new TilePickerViewModel(mWm.TilemapHeight / mWm.TileHeight,
                 mWm.TilemapWidth / mWm.TileWidth, mWm.TileWidth,
                 mWm.TileHeight, mWm.TileMapPath);
 
             TileViewModel = new TileViewModel();
 
-            for (var i = 0; i < GridEditorViewModel.GridTiles.Count; i++)
+            for (var i = 0; i < GridEditorViewModel.MapTiles.Count; i++)
             {
-                GridEditorViewModel.GridTiles[i].ImageIdBottom = mWm.GridLayers[0, i];
-                if (GridEditorViewModel.GridTiles[i].ImageIdBottom != -1)
-                    GridEditorViewModel.GridTiles[i].ImageSourceBottomLayer = TileEditorViewModel.Tiles
-                        .Find(x => x.ImageId == GridEditorViewModel.GridTiles[i].ImageIdBottom)
+                GridEditorViewModel.MapTiles[i].ImageIdBottom = mWm.GridLayers[0, i];
+                if (GridEditorViewModel.MapTiles[i].ImageIdBottom != -1)
+                {
+                    GridEditorViewModel.MapTiles[i].ImageSourceBottomLayer = TilePickerViewModel.Tiles
+                        .Find(x => x.ImageId == GridEditorViewModel.MapTiles[i].ImageIdBottom)
                         ?.CroppedTileSetImage;
+                }
 
-                GridEditorViewModel.GridTiles[i].ImageIdTop = mWm.GridLayers[1, i];
-                if (GridEditorViewModel.GridTiles[i].ImageIdTop != -1)
-                    GridEditorViewModel.GridTiles[i].ImageSourceTopLayer = TileEditorViewModel.Tiles
-                        .Find(x => x.ImageId == GridEditorViewModel.GridTiles[i].ImageIdTop)
+                GridEditorViewModel.MapTiles[i].ImageIdTop = mWm.GridLayers[1, i];
+                if (GridEditorViewModel.MapTiles[i].ImageIdTop != -1)
+                {
+                    GridEditorViewModel.MapTiles[i].ImageSourceTopLayer = TilePickerViewModel.Tiles
+                        .Find(x => x.ImageId == GridEditorViewModel.MapTiles[i].ImageIdTop)
                         ?.CroppedTileSetImage;
+                }
 
-                GridEditorViewModel.GridTiles[i].IsCollidable = mWm.Collidable[i] == 1;
+                GridEditorViewModel.MapTiles[i].IsCollidable = mWm.Collidable[i] == 1;
             }
 
             SubscribeToNewViewModels?.Invoke(this, 0);
@@ -286,28 +341,20 @@ namespace TileMapEditor.ViewModels
 
             if (IsShowingCollision)
             {
-                var old = GridEditorViewModel;
-                foreach (var tile in old.GridTiles.Where(tile => tile.IsCollidable))
+                foreach (var tile in GridEditorViewModel.MapTiles.Where(tile => tile.IsCollidable))
                 {
                     _tempImages.Add(tile.ImageSourceTopLayer);
                     _tempImages.Add(tile.ImageSourceBottomLayer);
 
                     tile.ImageSourceTopLayer =
-                        new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory +
-                                                "../../../Images/Collision.png"));
+                        new BitmapImage(new Uri(AssetStructure.CollisionPngPath));
                     tile.ImageSourceBottomLayer =
-                        new BitmapImage(new Uri(AppDomain.CurrentDomain.BaseDirectory +
-                                                "../../../Images/Collision.png"));
+                        new BitmapImage(new Uri(AssetStructure.CollisionPngPath));
                 }
-
-                CollisionButtonBackground = new SolidColorBrush(Colors.Red);
-                GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
-                GridEditorViewModel = old;
             }
             else
             {
-                var old = GridEditorViewModel;
-                foreach (var tile in old.GridTiles.Where(tile => tile.IsCollidable))
+                foreach (var tile in GridEditorViewModel.MapTiles.Where(tile => tile.IsCollidable))
                 {
                     tile.ImageSourceTopLayer = _tempImages[0];
                     _tempImages.RemoveAt(0);
@@ -315,16 +362,13 @@ namespace TileMapEditor.ViewModels
                     tile.ImageSourceBottomLayer = _tempImages[0];
                     _tempImages.RemoveAt(0);
                 }
-
-                CollisionButtonBackground = new SolidColorBrush(Colors.DarkSeaGreen);
-                GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
-                GridEditorViewModel = old;
             }
+            CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();
         }
 
         private void OnExportGridCommand()
         {
-            if (GridEditorViewModel.GridTiles.Count != 0)
+            if (GridEditorViewModel.MapTiles.Count != 0)
             {
                 var saveFileDialog = new SaveFileDialog
                 {
@@ -335,21 +379,28 @@ namespace TileMapEditor.ViewModels
                 };
                 var ok = saveFileDialog.ShowDialog();
 
-                var gridTileIsCollidableArray = new int[GridEditorViewModel.GridTiles.Count];
-                for (var i = 0; i < GridEditorViewModel.GridTiles.Count; i++)
-                    gridTileIsCollidableArray[i] = GridEditorViewModel.GridTiles[i].IsCollidable ? 1 : 0;
+                var gridTileIsCollidableArray = new int[GridEditorViewModel.MapTiles.Count];
+                for (var i = 0; i < GridEditorViewModel.MapTiles.Count; i++)
+                {
+                    gridTileIsCollidableArray[i] = GridEditorViewModel.MapTiles[i].IsCollidable ? 1 : 0;
+                }
 
-                var gridLayers = new int[2, GridEditorViewModel.GridTiles.Count];
-                for (var i = 0; i < GridEditorViewModel.GridTiles.Count; i++)
-                    gridLayers[0, i] = GridEditorViewModel.GridTiles[i].ImageIdBottom;
-                for (var i = 0; i < GridEditorViewModel.GridTiles.Count; i++)
-                    gridLayers[1, i] = GridEditorViewModel.GridTiles[i].ImageIdTop;
+                var gridLayers = new int[2, GridEditorViewModel.MapTiles.Count];
+                for (var i = 0; i < GridEditorViewModel.MapTiles.Count; i++)
+                {
+                    gridLayers[0, i] = GridEditorViewModel.MapTiles[i].ImageIdBottom;
+                }
+
+                for (var i = 0; i < GridEditorViewModel.MapTiles.Count; i++)
+                {
+                    gridLayers[1, i] = GridEditorViewModel.MapTiles[i].ImageIdTop;
+                }
 
                 if (saveFileDialog.FileName != "" && ok is true)
                 {
                     var fs = (FileStream)saveFileDialog.OpenFile();
 
-                    var image = new BitmapImage(new Uri(TileEditorViewModel.ImagePath));
+                    var image = new BitmapImage(new Uri(TilePickerViewModel.ImagePath));
 
                     var test = new MainWindowModel
                     {
@@ -358,9 +409,9 @@ namespace TileMapEditor.ViewModels
                         TilemapWidth = (int)image.Width,
                         Collidable = gridTileIsCollidableArray,
                         GridLayers = gridLayers,
-                        TileMapPath = TileEditorViewModel.ImagePath,
-                        TileHeight = TileEditorViewModel.TileHeight,
-                        TileWidth = TileEditorViewModel.TileWidth,
+                        TileMapPath = TilePickerViewModel.ImagePath,
+                        TileHeight = TilePickerViewModel.TileHeight,
+                        TileWidth = TilePickerViewModel.TileWidth,
                         GridHeight = GridEditorViewModel.Rows,
                         GridWidth = GridEditorViewModel.Columns
                     };
@@ -375,16 +426,17 @@ namespace TileMapEditor.ViewModels
             }
         }
 
-        private void OnUpdateNeighbourTiles(object? sender, List<GridEditorModel> tiles)
+        private void OnUpdateNeighbourTiles(object? sender, List<MapTile> tiles)
         {
             foreach (var tile in tiles)
+            {
                 if (tile is not null && tile.ImageIdBottom != -1)
-                    tile.ImageSourceBottomLayer = TileEditorViewModel.Tiles.Find(x => x.ImageId == tile.ImageIdBottom)
+                {
+                    tile.ImageSourceBottomLayer = TilePickerViewModel.Tiles.Find(x => x.ImageId == tile.ImageIdBottom)
                         ?.CroppedTileSetImage;
-
-            var old = GridEditorViewModel;
-            GridEditorViewModel = new GridEditorViewModel(old.Rows, old.Columns);
-            GridEditorViewModel = old;
+                }
+            }
+            CollectionViewSource.GetDefaultView(GridEditorViewModel.MapTiles).Refresh();
         }
     }
 }
