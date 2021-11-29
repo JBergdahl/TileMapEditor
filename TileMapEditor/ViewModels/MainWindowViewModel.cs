@@ -225,7 +225,7 @@ namespace TileMapEditor.ViewModels
             if (File.Exists(path))
             {
                 try
-                { 
+                {
                     File.Delete(path);
                 }
                 catch (Exception ex)
@@ -242,7 +242,7 @@ namespace TileMapEditor.ViewModels
             var newTileSetRows = (int)image.Height / TileHeight;
             var newTileSetColumns = (int)image.Width / TileWidth;
             var maxSizeOnTileSet = 400;
-            
+
             if (newTileSetRows * newTileSetColumns >= maxSizeOnTileSet)
             {
                 MessageBox.Show("Tile set is to big, try again with a smaller tile width and height",

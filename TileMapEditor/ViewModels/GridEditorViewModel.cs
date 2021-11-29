@@ -160,41 +160,18 @@ namespace TileMapEditor.ViewModels
             }
         }
 
-        private void UpdateTileNeighbours(MapTile tileOnGrid)
+        public void UpdateTileNeighbours(MapTile tileOnGrid)
         {
             var listOfNeighbourTiles = new List<MapTile>();
 
-            var tileOnGridAbovePressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
-
-            var tileOnGridBelowPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
-
-            var tileOnGridAboveLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
-
-            var tileOnGridAboveRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridBelowLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
-
-            var tileOnGridBelowRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
+            var tileOnGridAbovePressedTile = GetTileFromPosition(tileOnGrid, -1);
+            var tileOnGridBelowPressedTile = GetTileFromPosition(tileOnGrid, 1);
+            var tileOnGridAboveLeftOfPressedTile = GetTileFromPosition(tileOnGrid, -1, -1);
+            var tileOnGridAboveRightOfPressedTile = GetTileFromPosition(tileOnGrid, -1, 1);
+            var tileOnGridBelowLeftOfPressedTile = GetTileFromPosition(tileOnGrid, 1, -1);
+            var tileOnGridBelowRightOfPressedTile = GetTileFromPosition(tileOnGrid, 1, 1);
+            var tileOnGridRightOfPressedTile = GetTileFromPosition(tileOnGrid, 0, 1);
+            var tileOnGridLeftOfPressedTile = GetTileFromPosition(tileOnGrid, 0, -1);
 
             UpdateTilesAbovePressedTile(tileOnGridAbovePressedTile);
             listOfNeighbourTiles.Add(tileOnGridAbovePressedTile);
@@ -221,6 +198,13 @@ namespace TileMapEditor.ViewModels
             listOfNeighbourTiles.Add(tileOnGridBelowRightOfPressedTile);
 
             UpdateNeighbourTiles?.Invoke(this, listOfNeighbourTiles);
+        }
+
+        public MapTile GetTileFromPosition(MapTile tile, int x = 0, int y = 0)
+        {
+            return MapTiles.FirstOrDefault(t =>
+                t.TilePositionOnGrid.X.Equals(tile.TilePositionOnGrid.X + x) &&
+                t.TilePositionOnGrid.Y.Equals(tile.TilePositionOnGrid.Y + y));
         }
 
         public void OnSelectedTileChanged(object? sender, Tile tile)
@@ -313,41 +297,18 @@ namespace TileMapEditor.ViewModels
             }
         }
 
-        private void UpdateRemoveTileNeighbours(MapTile tileOnGrid)
+        public void UpdateRemoveTileNeighbours(MapTile tileOnGrid)
         {
             var listOfNeighbourTiles = new List<MapTile>();
 
-            var tileOnGridAbovePressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
-
-            var tileOnGridBelowPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y));
-
-            var tileOnGridAboveLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
-
-            var tileOnGridAboveRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X - 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridBelowLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
-
-            var tileOnGridBelowRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X + 1) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridRightOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y + 1));
-
-            var tileOnGridLeftOfPressedTile = MapTiles.FirstOrDefault(x =>
-                x.TilePositionOnGrid.X.Equals(tileOnGrid.TilePositionOnGrid.X) &&
-                x.TilePositionOnGrid.Y.Equals(tileOnGrid.TilePositionOnGrid.Y - 1));
+            var tileOnGridAbovePressedTile = GetTileFromPosition(tileOnGrid, -1);
+            var tileOnGridBelowPressedTile = GetTileFromPosition(tileOnGrid, 1);
+            var tileOnGridAboveLeftOfPressedTile = GetTileFromPosition(tileOnGrid, -1, -1);
+            var tileOnGridAboveRightOfPressedTile = GetTileFromPosition(tileOnGrid, -1, 1);
+            var tileOnGridBelowLeftOfPressedTile = GetTileFromPosition(tileOnGrid, 1, -1);
+            var tileOnGridBelowRightOfPressedTile = GetTileFromPosition(tileOnGrid, 1, 1);
+            var tileOnGridRightOfPressedTile = GetTileFromPosition(tileOnGrid, 0, 1);
+            var tileOnGridLeftOfPressedTile = GetTileFromPosition(tileOnGrid, 0, -1);
 
             if (tileOnGridAbovePressedTile is { })
             {
